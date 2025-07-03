@@ -104,7 +104,7 @@ const Popular = () => {
                     alt={movie.title}
                     width={200}
                     height={100}
-                    className="w-full rounded-t-lg object-cover"
+                    className="w-full sm:h-[25vh] h-[19vh] rounded-t-lg object-cover"
                   />
                   <div className="border border-t-0 border-blue-700 rounded-b-lg px-2 leading-8 ">
                     <p className="sm:text-[16px] text-[13px] truncate ">
