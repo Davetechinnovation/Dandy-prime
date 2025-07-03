@@ -1,0 +1,36 @@
+{
+  "name": "dandyprime",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+     "check": "tsc --noEmit && eslint . --ext .ts,.tsx"
+  },
+  "dependencies": {
+    "@upstash/redis": "^1.35.0",
+    "framer-motion": "^12.19.2",
+    "ioredis": "^5.6.1",
+    "lottie-react": "^2.4.1",
+    "lucide-react": "^0.525.0",
+    "next": "15.3.4",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "swr": "^2.3.3"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4.1.11",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "autoprefixer": "^10.4.21",
+    "eslint": "^9.30.0",
+    "eslint-config-next": "15.3.4",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.11",
+    "typescript": "^5"
+  }
+}
