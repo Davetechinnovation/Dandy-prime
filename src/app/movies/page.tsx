@@ -44,9 +44,8 @@ function NollywoodTab() {
   return <Nollywood />;
 }
 
-const Page = ({ onAllTabsLoaded }: { onAllTabsLoaded?: () => void }) => {
+const Page = () => {
   const [activeTab, setActiveTab] = useState("All");
-
   const tabs = ["All", "Hollywood", "Bollywood", "Asian", "Nollywood"];
 
   return (
@@ -67,7 +66,7 @@ const Page = ({ onAllTabsLoaded }: { onAllTabsLoaded?: () => void }) => {
 
       <div className="mt-6">
         <div style={{ display: activeTab === "All" ? "block" : "none" }}>
-          <AllTab onLoaded={onAllTabsLoaded || (() => {})} />
+          <AllTab onLoaded={() => {}} />
         </div>
         <div style={{ display: activeTab === "Hollywood" ? "block" : "none" }}>
           <HollywoodTab />

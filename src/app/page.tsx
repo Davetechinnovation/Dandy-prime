@@ -11,7 +11,7 @@ import Loader from "./Components/Loader";
 
 import dynamic from "next/dynamic";
 
-const FlashScreen = dynamic(() => import("./Components/flashscreen/page"), {
+const FlashScreen = dynamic(() => import("./Components/FlashScreen"), {
   ssr: false,
 });
 const GlobalLoader = dynamic(() => import("./Components/globalloader"), {

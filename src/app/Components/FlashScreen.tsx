@@ -1,7 +1,7 @@
 "use client";
 import { Play } from "lucide-react";
 import Player from "lottie-react";
-import loaderAnimation from "../loader2.json";
+import loaderAnimation from "./loader2.json";
 
 import React, { useEffect, useState } from "react";
 
@@ -12,9 +12,7 @@ type FlashScreenProps = {
   error?: string | null;
 };
 
-const FlashScreen = ({
-  error,
-}: FlashScreenProps) => {
+const FlashScreen = ({ error }: FlashScreenProps) => {
   const [progress, setProgress] = useState(0);
   const [visible, setVisible] = useState(true);
 
