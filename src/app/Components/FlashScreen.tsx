@@ -70,7 +70,7 @@ const FlashScreen = ({ error }: FlashScreenProps) => {
   }
   return (
     <div className="bg-[#000000fa] h-[100dvh] flex justify-center items-center min-w-[320px] overflow-x-auto ">
-      <div className="pt-[68px] flex flex-col items-center sm:gap-2 gap-1 ">
+      <div className="pt-[68px] flex flex-col items-center sm:gap-2 gap-5 ">
         <div className="bg-black p-3 rounded-3xl border-2 border-blue-700 ">
           <h1 className="text-blue-700 flex items-center gap-[5px] font-extrabold text-[50px] sm:text-[70px]  [transform:scaleY(1.4)] ">
             <span>D</span>
@@ -81,15 +81,15 @@ const FlashScreen = ({ error }: FlashScreenProps) => {
           </h1>
         </div>
         <div>
-          <p className="text-white text-center font-bold text-[22px] sm:text-[32px]  ">
+          <p className="text-white text-center font-bold text-[29px] sm:text-[32px]  ">
             <span>Dandy</span> <span className="text-blue-700">Prime</span>
           </p>
-          <p className="text-white font-semibold tracking-wider text-[14px] sm:text-[16px]  [transform:scaleY(1.2)]  ">
+          <p className="text-white font-semibold tracking-wider text-[15px] sm:text-[16px]  [transform:scaleY(1.2)]  ">
             <span className="text-blue-700">Your Gateway To</span> Unlimited
             Streaming
           </p>
         </div>
-        <div className="sm:max-w-[40px] max-w-[33px] w-full ">
+        <div className="sm:max-w-[40px] max-w-[38px] w-full ">
           <Player autoplay loop animationData={loaderAnimation} />
         </div>
         <div className="max-w-[300px]  w-full relative  ">
