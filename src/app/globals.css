@@ -1,8 +1,56 @@
 @import "tailwindcss";
 
+/* Reset and base styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
 
+/* Prevent pull-to-refresh and bounce scrolling */
 html,
 body {
-    overflow-x: auto;
-    min-width: 200px;
+  height: 100%;
+  width: 100%;
+  overscroll-behavior-y: contain; /* Block pull-to-refresh */
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  touch-action: pan-x pan-y; /* Allow scroll, block gesture nav */
+  background-color: #000; /* Default dark background for app feel */
+  color: #fff; /* Default text color if you want a dark theme */
+  font-family: sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Optional for smoother iOS experience */
+body {
+  position: fixed;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: auto; /* Prevent bounce in Safari */
+}
+
+/* Allow safe area on mobile (optional) */
+body {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+/* Make links and buttons feel native */
+a,
+button {
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+/* Hide tap highlight on mobile */
+* {
+  -webkit-tap-highlight-color: transparent;
 }
