@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import useSWR from "swr";
-import Image from "next/image";
+import ImageWithSkeleton from "../Components/ImageWithSkeleton";
 import { Star } from "lucide-react";
 import Loader from "../Components/Loader";
 
@@ -35,7 +35,7 @@ const Toprated = () => {
         <h2 className="sm:text-[30px] text-[23px] font-semibold py-4 ">
           Top Rated
         </h2>
-        <div className="px-2 grid grid-cols-3 md:grid-cols-6 gap-3 ">
+        <div className="px-2 grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-[10px]">
           {topRated.length === 0 && (
             <div className="col-span-3 md:col-span-6 text-center text-gray-400 py-8">
               No top rated movies found.
@@ -43,12 +43,12 @@ const Toprated = () => {
           )}
           {topRated.map((movie) => (
             <div key={movie.id} className="">
-              <Image
+              <ImageWithSkeleton
                 src={movie.image || "/images/sinners.webp"}
                 alt={movie.title}
-                width={200}
-                height={100}
-                className="w-full sm:h-[25vh] h-[19vh] rounded-t-lg object-cover "
+                width={500}
+                height={250}
+                className="w-full h-[120px] sm:h-[250px] rounded-t-lg object-cover"
                 loading="lazy"
                 placeholder="blur"
                 blurDataURL="/images/sinners.webp"

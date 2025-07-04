@@ -21,7 +21,7 @@ function mapMovie(movie: Movie) {
     id: movie.id,
     title: movie.title || movie.name || "",
     image: movie.backdrop_path
-      ? `https://image.tmdb.org/t/p/w500${movie.backdrop_path}`
+      ? `https://image.tmdb.org/t/p/w780${movie.backdrop_path}`
       : null,
     year: movie.release_date
       ? movie.release_date.slice(0, 4)

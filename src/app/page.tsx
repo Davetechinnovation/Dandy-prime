@@ -5,6 +5,7 @@ import { LayoutContext } from "./Providers";
 import Image from "next/image";
 import { Star, Bookmark, PlayCircle } from "lucide-react";
 import React, { useEffect, useState } from "react";
+import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from "framer-motion";
 import Movies from "./movies/page";
 import Loader from "./Components/Loader";
@@ -34,9 +35,7 @@ type HeroMovie = {
 
 export default function Home() {
   const { setHideLayout } = useContext(LayoutContext);
-  const [movies, setMovies] = useState<HeroMovie[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [loading, setLoading] = useState(true);
   const [isTransitioning, setIsTransitioning] = useState(false);
   // Only show flash/loader if not visited in this session
   const [showFlash, setShowFlash] = useState(() => !hasVisitedHome);
@@ -44,6 +43,16 @@ export default function Home() {
     () => !hasVisitedHome
   );
 
+  // React Query for hero movies
+  const { data: movies = [], isLoading: loading } = useQuery<HeroMovie[]>({
+    queryKey: ['heroMovies'],
+    queryFn: async () => {
+      const res = await fetch("/api/home/hero");
+      if (!res.ok) throw new Error('Network response was not ok');
+      return res.json();
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
   useEffect(() => {
     if (!hasVisitedHome) {
       hasVisitedHome = true;
@@ -67,22 +76,6 @@ export default function Home() {
       setShowGlobalLoader(false);
     }
   }, [showFlash, loading]);
-
-  useEffect(() => {
-    async function fetchMovies() {
-      setLoading(true);
-      try {
-        const res = await fetch("/api/home/hero");
-        const data = await res.json();
-        setMovies(data);
-      } catch {
-        setMovies([]);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchMovies();
-  }, []);
 
   // Auto-advance slides
   useEffect(() => {
@@ -127,7 +120,7 @@ export default function Home() {
   // Main page content
   const nextMovie = movies[(currentIndex + 1) % movies.length];
   return (
-    <div className="bg-black min-w-[320px] pt-[68px] min-h-[100dvh]">
+    <div className="bg-black min-w-[320px] py-[68px] min-h-[100dvh]">
       <div className="relative w-full h-[60vh] sm:h-[83vh] overflow-hidden">
         <AnimatePresence mode="popLayout">
           {loading ? (

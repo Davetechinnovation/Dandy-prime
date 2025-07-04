@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import Image from "next/image";
+import ImageWithSkeleton from "../Components/ImageWithSkeleton";
 import { Star } from "lucide-react";
 import Loader from "../Components/Loader";
 import Toprated from "./Toprated";
@@ -52,7 +52,7 @@ const NewReleasesSection = () => {
   }, []);
 
   return (
-    <div className="px-2 grid grid-cols-3 md:grid-cols-6 gap-3 ">
+    <div className="px-2 grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-[10px]">
       {loading ? (
         <div className="col-span-3 md:col-span-6 flex justify-center items-center py-8">
           <Loader />
@@ -64,12 +64,12 @@ const NewReleasesSection = () => {
       ) : (
         newReleases.map((movie) => (
           <div key={movie.id} className="">
-            <Image
+            <ImageWithSkeleton
               src={movie.image || "/images/sinners.webp"}
               alt={movie.title}
-              width={200}
-              height={100}
-              className=" w-full sm:h-[25vh] h-[19vh] rounded-t-lg object-cover "
+              width={500}
+              height={250}
+              className="w-full h-[120px] sm:h-[250px] rounded-t-lg object-cover"
               loading="lazy"
               placeholder="blur"
               blurDataURL="/images/sinners.webp"

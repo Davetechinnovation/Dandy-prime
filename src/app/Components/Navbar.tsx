@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { Menu, X, Home, Tv, Clapperboard, Info, Mail, FileText, Settings } from "lucide-react";
 import React, { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 
 const Section = () => {
   const [navOpen, setNavOpen] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     if (navOpen) {
@@ -36,25 +38,25 @@ const Section = () => {
           )}
         </div>
         <ul className=" gap-6 text-sm font-semibold lg:flex hidden">
-          <li className="hover:text-blue-700 duration-500 transition-all">
+          <li className={`hover:text-blue-700 duration-500 transition-all ${pathname === '/' ? 'text-blue-700' : ''}`}>
             <Link href="/">Home</Link>
           </li>
-          <li className="hover:text-blue-700 duration-500 transition-all">
+          <li className={`hover:text-blue-700 duration-500 transition-all ${pathname === '/live' ? 'text-blue-700' : ''}`}>
             <Link href="/live">Live TV</Link>
           </li>
-          <li className="hover:text-blue-700 duration-500 transition-all">
+          <li className={`hover:text-blue-700 duration-500 transition-all ${pathname === '/kdramas' ? 'text-blue-700' : ''}`}>
             <Link href="/kdramas">K-Dramas</Link>
           </li>
-          <li className="hover:text-blue-700 duration-500 transition-all">
+          <li className={`hover:text-blue-700 duration-500 transition-all ${pathname === '/about' ? 'text-blue-700' : ''}`}>
             <Link href="/about">About</Link>
           </li>
-          <li className="hover:text-blue-700 duration-500 transition-all">
+          <li className={`hover:text-blue-700 duration-500 transition-all ${pathname === '/contact' ? 'text-blue-700' : ''}`}>
             <Link href="/contact">Contact us</Link>
           </li>
-          <li className="hover:text-blue-700 duration-500 transition-all">
+          <li className={`hover:text-blue-700 duration-500 transition-all ${pathname === '/policies' ? 'text-blue-700' : ''}`}>
             <Link href="/policies">Terms & Privacy</Link>
           </li>
-          <li className="hover:text-blue-700 duration-500 transition-all">
+          <li className={`hover:text-blue-700 duration-500 transition-all ${pathname === '/settings' ? 'text-blue-700' : ''}`}>
             <Link href="/settings">Settings</Link>
           </li>
         </ul>
@@ -81,45 +83,45 @@ const Section = () => {
           }}
         >
           <ul className="text-sm font-semibold flex flex-col gap-10  text-white text-[16px] mt-10">
-            <li className="hover:text-blue-700 duration-500 transition-all flex items-center gap-2 ">
-               <Home size={20} className="text-white" />
+            <li className={`hover:text-blue-700 duration-500 transition-all flex items-center gap-2 ${pathname === '/' ? 'text-blue-700' : ''}`}>
+               <Home size={20} className={pathname === '/' ? 'text-blue-700' : 'text-white'} />
               <Link href="/" onClick={() => setNavOpen(false)}>
                 Home
               </Link>
              
             </li>
-            <li className="hover:text-blue-700 duration-500 transition-all flex items-center gap-2 ">
-              <Tv size={20} className="text-white" />
+            <li className={`hover:text-blue-700 duration-500 transition-all flex items-center gap-2 ${pathname === '/live' ? 'text-blue-700' : ''}`}>
+              <Tv size={20} className={pathname === '/live' ? 'text-blue-700' : 'text-white'} />
               <Link href="/live" onClick={() => setNavOpen(false)}>
                 Live TV
               </Link>
             </li>
-            <li className="hover:text-blue-700 duration-500 transition-all flex items-center gap-2 ">
-              <Clapperboard size={20} className="text-white" />
+            <li className={`hover:text-blue-700 duration-500 transition-all flex items-center gap-2 ${pathname === '/kdramas' ? 'text-blue-700' : ''}`}>
+              <Clapperboard size={20} className={pathname === '/kdramas' ? 'text-blue-700' : 'text-white'} />
               <Link href="/kdramas" onClick={() => setNavOpen(false)}>
                 K-Dramas
               </Link>
             </li>
-            <li className="hover:text-blue-700 duration-500 transition-all flex items-center gap-2 ">
-              <Info size={20} className="text-white" />
+            <li className={`hover:text-blue-700 duration-500 transition-all flex items-center gap-2 ${pathname === '/about' ? 'text-blue-700' : ''}`}>
+              <Info size={20} className={pathname === '/about' ? 'text-blue-700' : 'text-white'} />
               <Link href="/about" onClick={() => setNavOpen(false)}>
                 About
               </Link>
             </li>
-            <li className="hover:text-blue-700 duration-500 transition-all flex items-center gap-2 ">
-              <Mail size={20} className="text-white" />
+            <li className={`hover:text-blue-700 duration-500 transition-all flex items-center gap-2 ${pathname === '/contact' ? 'text-blue-700' : ''}`}>
+              <Mail size={20} className={pathname === '/contact' ? 'text-blue-700' : 'text-white'} />
               <Link href="/contact" onClick={() => setNavOpen(false)}>
                 Contact us
               </Link>
             </li>
-            <li className="hover:text-blue-700 duration-500 transition-all flex items-center gap-2 ">
-              <FileText size={20} className="text-white" />
+            <li className={`hover:text-blue-700 duration-500 transition-all flex items-center gap-2 ${pathname === '/policies' ? 'text-blue-700' : ''}`}>
+              <FileText size={20} className={pathname === '/policies' ? 'text-blue-700' : 'text-white'} />
               <Link href="/policies" onClick={() => setNavOpen(false)}>
                 Terms & Privacy
               </Link>
             </li>
-            <li className="hover:text-blue-700 duration-500 transition-all flex items-center gap-2 ">
-              <Settings size={20} className="text-white" />
+            <li className={`hover:text-blue-700 duration-500 transition-all flex items-center gap-2 ${pathname === '/settings' ? 'text-blue-700' : ''}`}>
+              <Settings size={20} className={pathname === '/settings' ? 'text-blue-700' : 'text-white'} />
               <Link href="/settings" onClick={() => setNavOpen(false)}>
                 Settings
               </Link>

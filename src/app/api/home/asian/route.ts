@@ -33,7 +33,7 @@ function mapContent(item: ContentItem) {
     id: item.id,
     title: item.title || item.name || "", // 'name' for TV shows
     image: item.backdrop_path
-      ? `https://image.tmdb.org/t/p/w500${item.backdrop_path}`
+      ? `https://image.tmdb.org/t/p/w780${item.backdrop_path}`
       : null,
     year: item.release_date // for movies
       ? item.release_date.slice(0, 4)

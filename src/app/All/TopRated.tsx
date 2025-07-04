@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from "react";
-import Image from "next/image";
+import React from "react";
+import { useQuery } from '@tanstack/react-query';
+import ImageWithSkeleton from "../Components/ImageWithSkeleton";
 import { Star } from "lucide-react";
 import Loader from "../Components/Loader";
 
@@ -12,24 +13,19 @@ type Movie = {
 };
 
 const TopRated = () => {
-  const [topRated, setTopRated] = useState<Movie[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchTopRated() {
-      setLoading(true);
-      try {
-        const res = await fetch("/api/home/all");
-        const data = await res.json();
-        setTopRated(data.topRated || []);
-      } catch {
-        setTopRated([]);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchTopRated();
-  }, []);
+  // React Query for top rated
+  const { data, isLoading } = useQuery({
+    queryKey: ['allTopRated'],
+    queryFn: async () => {
+      const res = await fetch("/api/home/all");
+      if (!res.ok) throw new Error('Network response was not ok');
+      return res.json();
+    },
+    staleTime: 1000 * 60 * 10, // 10 minutes
+    refetchOnWindowFocus: false,
+  });
+  const topRated: Movie[] = data?.topRated || [];
+  const loading = isLoading;
 
   return (
     <div>
@@ -40,15 +36,18 @@ const TopRated = () => {
         {loading ? (
           <Loader />
         ) : (
-          <div className="px-2 grid grid-cols-3 md:grid-cols-6 gap-3 ">
+          <div className="px-2 grid grid-cols-3 md:grid-cols-6 gap-[10px] ">
             {topRated.map((movie) => (
               <div key={movie.id} className="">
-                <Image
+                <ImageWithSkeleton
                   src={movie.image || "/images/sinners.webp"}
                   alt={movie.title}
-                  width={300}
-                  height={170}
-                  className="w-full sm:h-[25vh] h-[19vh] rounded-t-lg object-cover"
+                  width={500}
+                  height={250}
+                  className="w-full h-[120px] sm:h-[250px] rounded-t-lg object-cover"
+                  loading="lazy"
+                  placeholder="blur"
+                  blurDataURL="/images/sinners.webp"
                 />
                 <div className="border border-t-0 border-blue-700 rounded-b-lg px-2 leading-8 ">
                   <p className="sm:text-[16px] text-[13px] truncate ">
