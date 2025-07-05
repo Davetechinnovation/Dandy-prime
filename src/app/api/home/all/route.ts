@@ -86,7 +86,8 @@ export async function GET(req: Request) {
   const pageParam = url.searchParams.get("page");
   const pageNum = pageParam ? parseInt(pageParam) : 1;
   let popular: Movie[] = [];
-  let popData: any = {};
+  type PopData = { results?: Movie[]; total_pages?: number };
+  let popData: PopData = {};
   const popularCacheKey = `all:popular:page:${pageNum}`;
   const popularRaw = await redis.get(popularCacheKey);
   if (typeof popularRaw === 'string') {
