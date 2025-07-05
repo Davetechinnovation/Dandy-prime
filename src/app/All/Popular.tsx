@@ -93,7 +93,7 @@ const Popular = () => {
                   <span>{movie.year}</span>
                   <span className="flex items-center justify-between gap-2 ">
                     <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                    {movie.rating}
+                    {Number(movie.rating).toFixed(1)}
                   </span>
                 </p>
               </div>

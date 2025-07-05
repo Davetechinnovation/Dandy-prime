@@ -70,7 +70,7 @@ const FlashScreen = ({ error }: FlashScreenProps) => {
   }
   return (
     <div className="bg-[#000000fa] h-[100dvh] flex justify-center items-center min-w-[320px] overflow-x-auto ">
-      <div className="pt-[68px] flex flex-col items-center sm:gap-2 gap-5 ">
+      <div className="pt-[68px] flex flex-col items-center sm:gap-2 gap-3 ">
         <div className="bg-black p-3 rounded-3xl border-2 border-blue-700 ">
           <h1 className="text-blue-700 flex items-center gap-[5px] font-extrabold text-[50px] sm:text-[70px]  [transform:scaleY(1.4)] ">
             <span>D</span>

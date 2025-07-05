@@ -81,17 +81,31 @@ export async function GET(req: Request) {
     await redis.set("all:newReleases", JSON.stringify(newReleases));
   }
 
-  // 3. Popular (infinite scroll, no cache)
+  // 3. Popular (infinite scroll, cache per page for 1 hour)
   const url = new URL(req.url);
   const pageParam = url.searchParams.get("page");
   const pageNum = pageParam ? parseInt(pageParam) : 1;
   let popular: Movie[] = [];
-  const popRes = await fetch(
-    `${TMDB_BASE_URL}/movie/popular?language=en-US&page=${pageNum}&api_key=${TMDB_API_KEY}`
-  );
-  const popData = await popRes.json();
-  if (Array.isArray(popData.results)) {
-    popular = popData.results.map(mapMovie);
+  let popData: any = {};
+  const popularCacheKey = `all:popular:page:${pageNum}`;
+  const popularRaw = await redis.get(popularCacheKey);
+  if (typeof popularRaw === 'string') {
+    const cached = JSON.parse(popularRaw);
+    popular = cached.popular;
+    popData.total_pages = cached.totalPages;
+  } else {
+    const popRes = await fetch(
+      `${TMDB_BASE_URL}/movie/popular?language=en-US&page=${pageNum}&api_key=${TMDB_API_KEY}`
+    );
+    popData = await popRes.json();
+    if (Array.isArray(popData.results)) {
+      popular = popData.results.map(mapMovie);
+    }
+    await redis.set(
+      popularCacheKey,
+      JSON.stringify({ popular, totalPages: popData.total_pages || 1000 }),
+      { ex: 60 * 60 }
+    ); // 1 hour
   }
 
   return NextResponse.json({
