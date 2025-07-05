@@ -121,7 +121,7 @@ export default function Home() {
   const nextMovie = movies[(currentIndex + 1) % movies.length];
   return (
     <div className="bg-black min-w-[320px] py-[68px] min-h-[100dvh]">
-      <div className="relative w-full h-[53vh] sm:h-[83vh] overflow-hidden">
+      <div className="relative w-full h-[52vh] sm:h-[83vh] overflow-hidden">
         <AnimatePresence mode="popLayout">
           {loading ? (
             <div className="flex items-center justify-center w-full h-full">

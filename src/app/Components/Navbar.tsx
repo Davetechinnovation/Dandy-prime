@@ -83,46 +83,45 @@ const Section = () => {
           }}
         >
           <ul className="text-sm font-semibold flex flex-col gap-10  text-white text-[16px] mt-10">
-            <li className={`hover:text-blue-700 duration-500 transition-all flex items-center gap-2 ${pathname === '/' ? 'text-blue-700' : ''}`}>
-               <Home size={20} className={pathname === '/' ? 'text-blue-700' : 'text-white'} />
-              <Link href="/" onClick={() => setNavOpen(false)}>
+            <li className={`hover:text-blue-700 duration-500 transition-all flex items-center gap-2 ${pathname === '/' ? 'underline' : ''}`}>
+               <Home size={20} className="text-white" />
+              <Link href="/" onClick={() => setNavOpen(false)} className={pathname === '/' ? 'underline' : ''}>
                 Home
               </Link>
-             
             </li>
-            <li className={`hover:text-blue-700 duration-500 transition-all flex items-center gap-2 ${pathname === '/live' ? 'text-blue-700' : ''}`}>
-              <Tv size={20} className={pathname === '/live' ? 'text-blue-700' : 'text-white'} />
-              <Link href="/live" onClick={() => setNavOpen(false)}>
+            <li className={`hover:text-blue-700 duration-500 transition-all flex items-center gap-2 ${pathname === '/live' ? 'underline' : ''}`}>
+              <Tv size={20} className="text-white" />
+              <Link href="/live" onClick={() => setNavOpen(false)} className={pathname === '/live' ? 'underline' : ''}>
                 Live TV
               </Link>
             </li>
-            <li className={`hover:text-blue-700 duration-500 transition-all flex items-center gap-2 ${pathname === '/kdramas' ? 'text-blue-700' : ''}`}>
-              <Clapperboard size={20} className={pathname === '/kdramas' ? 'text-blue-700' : 'text-white'} />
-              <Link href="/kdramas" onClick={() => setNavOpen(false)}>
+            <li className={`hover:text-blue-700 duration-500 transition-all flex items-center gap-2 ${pathname === '/kdramas' ? 'underline' : ''}`}>
+              <Clapperboard size={20} className="text-white" />
+              <Link href="/kdramas" onClick={() => setNavOpen(false)} className={pathname === '/kdramas' ? 'underline' : ''}>
                 K-Dramas
               </Link>
             </li>
-            <li className={`hover:text-blue-700 duration-500 transition-all flex items-center gap-2 ${pathname === '/about' ? 'text-blue-700' : ''}`}>
-              <Info size={20} className={pathname === '/about' ? 'text-blue-700' : 'text-white'} />
-              <Link href="/about" onClick={() => setNavOpen(false)}>
+            <li className={`hover:text-blue-700 duration-500 transition-all flex items-center gap-2 ${pathname === '/about' ? 'underline' : ''}`}>
+              <Info size={20} className="text-white" />
+              <Link href="/about" onClick={() => setNavOpen(false)} className={pathname === '/about' ? 'underline' : ''}>
                 About
               </Link>
             </li>
-            <li className={`hover:text-blue-700 duration-500 transition-all flex items-center gap-2 ${pathname === '/contact' ? 'text-blue-700' : ''}`}>
-              <Mail size={20} className={pathname === '/contact' ? 'text-blue-700' : 'text-white'} />
-              <Link href="/contact" onClick={() => setNavOpen(false)}>
+            <li className={`hover:text-blue-700 duration-500 transition-all flex items-center gap-2 ${pathname === '/contact' ? 'underline' : ''}`}>
+              <Mail size={20} className="text-white" />
+              <Link href="/contact" onClick={() => setNavOpen(false)} className={pathname === '/contact' ? 'underline' : ''}>
                 Contact us
               </Link>
             </li>
-            <li className={`hover:text-blue-700 duration-500 transition-all flex items-center gap-2 ${pathname === '/policies' ? 'text-blue-700' : ''}`}>
-              <FileText size={20} className={pathname === '/policies' ? 'text-blue-700' : 'text-white'} />
-              <Link href="/policies" onClick={() => setNavOpen(false)}>
+            <li className={`hover:text-blue-700 duration-500 transition-all flex items-center gap-2 ${pathname === '/policies' ? 'underline' : ''}`}>
+              <FileText size={20} className="text-white" />
+              <Link href="/policies" onClick={() => setNavOpen(false)} className={pathname === '/policies' ? 'underline' : ''}>
                 Terms & Privacy
               </Link>
             </li>
-            <li className={`hover:text-blue-700 duration-500 transition-all flex items-center gap-2 ${pathname === '/settings' ? 'text-blue-700' : ''}`}>
-              <Settings size={20} className={pathname === '/settings' ? 'text-blue-700' : 'text-white'} />
-              <Link href="/settings" onClick={() => setNavOpen(false)}>
+            <li className={`hover:text-blue-700 duration-500 transition-all flex items-center gap-2 ${pathname === '/settings' ? 'underline' : ''}`}>
+              <Settings size={20} className="text-white" />
+              <Link href="/settings" onClick={() => setNavOpen(false)} className={pathname === '/settings' ? 'underline' : ''}>
                 Settings
               </Link>
             </li>
