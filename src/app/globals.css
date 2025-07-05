@@ -2,7 +2,8 @@
 
 html,
 body {
-
+  overflow-x: auto;
+  min-width: 200px;
   overscroll-behavior-y: none;
   scroll-behavior: smooth;
   user-select: none; /* Prevent text copying */

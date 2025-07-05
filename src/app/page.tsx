@@ -138,7 +138,7 @@ export default function Home() {
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.7, ease: "easeInOut" }}
               >
-                <div className="w-full h-[60vh] sm:h-[80vh] aspect-[16/9] relative">
+                <div className="w-full h-[50vh] sm:h-[80vh] aspect-[16/9] relative">
                   {currentMovie?.image && (
                     <Image
                       src={currentMovie.image}
@@ -149,7 +149,7 @@ export default function Home() {
                     />
                   )}
                   <div className="absolute bottom-0 left-0 w-full h-full bg-black/[30%] flex items-end">
-                    <div className="text-white sm:px-10 px-3 sm:pb-10 pb-16  flex flex-col gap-2">
+                    <div className="text-white sm:px-10 px-3 sm:pb-10 pb-6  flex flex-col gap-2">
                       <h1 className="sm:text-[50px] text-[25px] font-bold">
                         {currentMovie.title}
                       </h1>
@@ -192,7 +192,7 @@ export default function Home() {
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.7, ease: "easeInOut" }}
                 >
-                  <div className="w-full h-[60vh] sm:h-[80vh] aspect-[16/9] relative">
+                  <div className="w-full h-[50vh] sm:h-[80vh] aspect-[16/9] relative">
                     {nextMovie?.image && (
                       <Image
                         src={nextMovie.image}
@@ -203,7 +203,7 @@ export default function Home() {
                       />
                     )}
                     <div className="absolute bottom-0 left-0 w-full h-full bg-black/[30%] flex items-end">
-                      <div className="text-white sm:px-10 px-3 sm:pb-10 pb-16 pt-[69px] flex flex-col gap-2">
+                      <div className="text-white sm:px-10 px-3 sm:pb-10 pb-6 pt-[69px] flex flex-col gap-2">
                         <h1 className="sm:text-[50px] text-[25px] font-bold">
                           {nextMovie.title}
                         </h1>
@@ -240,7 +240,7 @@ export default function Home() {
             </div>
           ) : (
             <div className="flex items-center justify-center w-full h-full text-white text-xl">
-              No movies found.
+              Error Please refresh.
             </div>
           )}
         </AnimatePresence>
