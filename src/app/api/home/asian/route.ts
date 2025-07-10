@@ -15,12 +15,12 @@ const ASIAN_COUNTRIES = [
   "SG", // Singapore
 ];
 
-// General map function for both movies and TV shows
 interface ContentItem {
   id: number;
   title?: string;
   name?: string;
   backdrop_path?: string;
+  poster_path?: string;
   release_date?: string;
   first_air_date?: string;
   vote_average?: number;
@@ -31,153 +31,182 @@ interface ContentItem {
 function mapContent(item: ContentItem) {
   return {
     id: item.id,
-    title: item.title || item.name || "", // 'name' for TV shows
-    image: item.backdrop_path
-      ? `https://image.tmdb.org/t/p/w780${item.backdrop_path}`
+    title: item.title || item.name || "",
+    image: item.poster_path
+      ? `https://image.tmdb.org/t/p/w500${item.poster_path}`
       : null,
-    year: item.release_date // for movies
+    year: item.release_date
       ? item.release_date.slice(0, 4)
-      : item.first_air_date // for TV shows
+      : item.first_air_date
       ? item.first_air_date.slice(0, 4)
       : null,
     rating:
       typeof item.vote_average === "number"
         ? item.vote_average.toFixed(1)
         : null,
-    media_type: item.media_type || (item.title ? "movie" : "tv"), // Added to distinguish if needed
+    mediaType: item.media_type || (item.title ? "movie" : "tv"),
     video: item.video,
   };
 }
 
-const ASIAN_TOPRATED_CACHE_KEY = "asian:toprated";
-const ASIAN_NEWRELEASE_CACHE_KEY = "asian:newreleases";
+// Removed EMPTY_ARRAY, use [] as T[] directly for type safety
+const DEFAULT_TOTAL_PAGES = 1000;
+const CACHE_TTL = 60 * 60;
+const ERROR_TTL = 5 * 60;
 
-export async function GET(req: Request) {
-  // Helper function to fetch and merge results for both movies and TV shows
-  const fetchAndMergeContent = async (
-    sortBy: string,
-    filters: string,
-    page: number = 1
-  ) => {
+const ASIAN_TOP_RATED_CACHE_KEY = "asian:topRated";
+const ASIAN_NEW_RELEASES_CACHE_KEY = "asian:newReleases";
+
+function buildTmdbUrl(
+  endpoint: string,
+  params: Record<string, string | number> = {}
+) {
+  const url = new URL(`${TMDB_BASE_URL}${endpoint}`);
+  url.searchParams.set("api_key", TMDB_API_KEY || "");
+  for (const [key, value] of Object.entries(params)) {
+    url.searchParams.set(key, String(value));
+  }
+  return url.toString();
+}
+
+interface FetchAndMergeOptions<T> {
+  cacheKey: string;
+  sortBy: string;
+  filters: string;
+  page?: number;
+  mapFn: (item: ContentItem) => T;
+  cacheTTL?: number;
+  errorTTL?: number;
+}
+
+async function fetchAndMergeContent<T>({
+  cacheKey,
+  sortBy,
+  filters,
+  page = 1,
+  mapFn,
+  cacheTTL = CACHE_TTL,
+  errorTTL = ERROR_TTL,
+}: FetchAndMergeOptions<T>): Promise<T[]> {
+  const cached = await redis.get(cacheKey);
+  if (typeof cached === "string" && cached) {
+    try {
+      return JSON.parse(cached);
+    } catch {
+      // ignore
+    }
+  }
+  try {
     const allContent: ContentItem[] = [];
-    // Fetch all countries in parallel for this page
-    const countryPromises = ASIAN_COUNTRIES.map(async (country) => {
-      // Fetch movies and TV in parallel for this country
+    for (const country of ASIAN_COUNTRIES) {
+      const url = buildTmdbUrl("/discover/movie", {
+        sort_by: sortBy,
+        language: "en-US",
+        page,
+        with_origin_country: country,
+      });
+      const tvUrl = buildTmdbUrl("/discover/tv", {
+        sort_by: sortBy,
+        language: "en-US",
+        page,
+        with_origin_country: country,
+      });
       const [movieRes, tvRes] = await Promise.all([
-        fetch(
-          `${TMDB_BASE_URL}/discover/movie?sort_by=${sortBy}&language=en-US&page=${page}&api_key=${TMDB_API_KEY}&with_origin_country=${country}${filters}&without_genres=99,10770`,
-          { headers: { "Content-Type": "application/json" } }
-        ),
-        fetch(
-          `${TMDB_BASE_URL}/discover/tv?sort_by=${sortBy}&language=en-US&page=${page}&api_key=${TMDB_API_KEY}&with_origin_country=${country}${filters}&without_genres=99,10770`,
-          { headers: { "Content-Type": "application/json" } }
-        ),
+        fetch(url + filters, {
+          headers: { "Content-Type": "application/json" },
+        }),
+        fetch(tvUrl + filters, {
+          headers: { "Content-Type": "application/json" },
+        }),
       ]);
       const movieData = await movieRes.json();
       const tvData = await tvRes.json();
-      const movieResults = Array.isArray(movieData.results)
-        ? movieData.results.map((item: ContentItem) => ({
+      if (Array.isArray(movieData?.results)) {
+        allContent.push(
+          ...movieData.results.map((item: ContentItem) => ({
             ...item,
             media_type: "movie",
           }))
-        : [];
-      const tvResults = Array.isArray(tvData.results)
-        ? tvData.results.map((item: ContentItem) => ({
+        );
+      }
+      if (Array.isArray(tvData?.results)) {
+        allContent.push(
+          ...tvData.results.map((item: ContentItem) => ({
             ...item,
             media_type: "tv",
           }))
-        : [];
-      return [...movieResults, ...tvResults];
-    });
-    // Wait for all countries for this page
-    const results = await Promise.all(countryPromises);
-    results.forEach((arr) => allContent.push(...arr));
-
-    // Deduplicate by id and filter out items with no image
+        );
+      }
+    }
     const seen = new Set<number>();
-    return allContent.filter((m) => {
-      if (seen.has(m.id) || !m.backdrop_path) return false;
+    const deduped = allContent.filter((m) => {
+      if (seen.has(m.id) || !m.poster_path) return false;
       seen.add(m.id);
       return true;
     });
-  };
-
-  // 1. Top Rated Asian Content (Movies & TV) - 12 random, cache 1 hour
-  let topRated: ReturnType<typeof mapContent>[] = [];
-  const cachedTopRated = await redis.get(ASIAN_TOPRATED_CACHE_KEY);
-  if (typeof cachedTopRated === "string") {
-    try {
-      topRated = JSON.parse(cachedTopRated);
-    } catch {
-      topRated = [];
-    }
-  }
-  if (!topRated || topRated.length === 0) {
-    const minYear = 2000;
-    const allTopRated = await fetchAndMergeContent(
-      "vote_average.desc",
-      `&vote_count.gte=90&primary_release_date.gte=${minYear}-01-01`
+    const mapped = deduped.map(mapFn);
+    await redis.setex(cacheKey, cacheTTL, JSON.stringify(mapped));
+    return mapped;
+  } catch (error) {
+    console.error(
+      "Error in fetchAndMergeContent:",
+      error instanceof Error ? error.message : error
     );
-    topRated = allTopRated
-      .sort(() => 0.5 - Math.random())
-      .slice(0, 12)
-      .map(mapContent);
-    await redis.set(ASIAN_TOPRATED_CACHE_KEY, JSON.stringify(topRated));
+    await redis.setex(cacheKey, errorTTL, JSON.stringify([]));
+    return [] as T[];
   }
+}
 
-  // 2. New Released Asian Content (Movies & TV) - 12 random, from last year to this year, cache 1 hour
-  let newReleases: ReturnType<typeof mapContent>[] = [];
-  const cachedNewReleases = await redis.get(ASIAN_NEWRELEASE_CACHE_KEY);
-  if (typeof cachedNewReleases === "string") {
-    try {
-      newReleases = JSON.parse(cachedNewReleases);
-    } catch {
-      newReleases = [];
-    }
+export async function GET(req: Request) {
+  if (!TMDB_API_KEY) {
+    return NextResponse.json(
+      { error: "TMDB_API_KEY is not set" },
+      { status: 500 }
+    );
   }
-  if (!newReleases || newReleases.length === 0) {
+  try {
+    const url = new URL(req.url);
+    const pageParam = url.searchParams.get("page");
+    const pageNum = pageParam ? parseInt(pageParam) : 1;
     const thisYear = new Date().getFullYear();
     const twoYearsAgo = thisYear - 2;
-    const allNewReleases = await fetchAndMergeContent(
-      "primary_release_date.desc",
-      `&primary_release_date.gte=${twoYearsAgo}-01-01&primary_release_date.lte=${thisYear}-12-31&vote_count.gte=90`
-    );
-    newReleases = allNewReleases
-      .sort(() => 0.5 - Math.random())
-      .slice(0, 12)
-      .map(mapContent);
-    await redis.set(ASIAN_NEWRELEASE_CACHE_KEY, JSON.stringify(newReleases));
-  }
 
-  // 3. Popular Asian Content (Movies & TV) - infinite scroll, cache per page for 1 hour
-  const url = new URL(req.url);
-  const pageParam = url.searchParams.get("page");
-  const pageNum = pageParam ? parseInt(pageParam) : 1;
-  const popularCacheKey = `asian:popular:page:${pageNum}`;
-  const popularRaw = await redis.get(popularCacheKey);
-  let popular: ReturnType<typeof mapContent>[] = [];
-  if (typeof popularRaw === "string") {
-    try {
-      popular = JSON.parse(popularRaw);
-    } catch {
-      popular = [];
-    }
-  }
-  if (!popular || popular.length === 0) {
-    const allPopular = await fetchAndMergeContent(
-      "popularity.desc",
-      `&vote_count.gte=90`,
-      pageNum
-    );
-    popular = allPopular.map(mapContent);
-    await redis.set(popularCacheKey, JSON.stringify(popular));
-  }
+    const [topRated, newReleases, popular] = await Promise.all([
+      fetchAndMergeContent({
+        cacheKey: ASIAN_TOP_RATED_CACHE_KEY,
+        sortBy: "vote_average.desc",
+        filters: `&vote_count.gte=90&primary_release_date.gte=2000-01-01&without_genres=99,10770`,
+        mapFn: mapContent,
+      }).then((arr) => arr.sort(() => 0.5 - Math.random()).slice(0, 12)),
 
-  return NextResponse.json({
-    topRated,
-    newReleases,
-    popular,
-    page: pageNum,
-    totalPages: 1000, // Still a high number, as merging results makes true total_pages hard to calculate accurately
-  });
+      fetchAndMergeContent({
+        cacheKey: ASIAN_NEW_RELEASES_CACHE_KEY,
+        sortBy: "primary_release_date.desc",
+        filters: `&primary_release_date.gte=${twoYearsAgo}-01-01&primary_release_date.lte=${thisYear}-12-31&vote_count.gte=90&without_genres=99,10770`,
+        mapFn: mapContent,
+      }).then((arr) => arr.sort(() => 0.5 - Math.random()).slice(0, 12)),
+
+      fetchAndMergeContent({
+        cacheKey: `asian:popular:page:${pageNum}`,
+        sortBy: "popularity.desc",
+        filters: `&vote_count.gte=90&without_genres=99,10770`,
+        page: pageNum,
+        mapFn: mapContent,
+      }),
+    ]);
+
+    return NextResponse.json({
+      topRated,
+      newReleases,
+      popular,
+      page: pageNum,
+      totalPages: DEFAULT_TOTAL_PAGES,
+    });
+  } catch (error) {
+    console.error("Error in Asian GET handler:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
 }

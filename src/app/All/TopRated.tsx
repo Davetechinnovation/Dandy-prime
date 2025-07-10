@@ -43,8 +43,8 @@ const TopRated = () => {
                   src={movie.image || "/images/sinners.webp"}
                   alt={movie.title}
                   width={500}
-                  height={250}
-                  className="w-full h-[120px] sm:h-[250px] rounded-t-lg object-cover"
+                  height={300}
+                  className="w-full h-[120px] sm:h-[300px] rounded-t-lg object-cover"
                   loading="lazy"
                   placeholder="blur"
                   blurDataURL="/images/sinners.webp"

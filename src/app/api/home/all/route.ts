@@ -1,8 +1,5 @@
-import { NextResponse } from "next/server";
 import redis from "@/lib/redis";
-
-const TMDB_API_KEY = process.env.TMDB_API_KEY;
-console.log('TMDB_API_KEY:', TMDB_API_KEY);
+import { NextResponse } from "next/server";
 const TMDB_BASE_URL = "https://api.themoviedb.org/3";
 
 interface Movie {
@@ -10,6 +7,7 @@ interface Movie {
   title?: string;
   name?: string;
   backdrop_path?: string;
+  poster_path?: string;
   release_date?: string;
   first_air_date?: string;
   vote_average?: number;
@@ -20,8 +18,8 @@ function mapMovie(movie: Movie) {
   return {
     id: movie.id,
     title: movie.title || movie.name || "",
-    image: movie.backdrop_path
-      ? `https://image.tmdb.org/t/p/w780${movie.backdrop_path}`
+    image: movie.poster_path
+      ? `https://image.tmdb.org/t/p/w780${movie.poster_path}`
       : null,
     year: movie.release_date
       ? movie.release_date.slice(0, 4)
@@ -29,91 +27,134 @@ function mapMovie(movie: Movie) {
       ? movie.first_air_date.slice(0, 4)
       : null,
     rating:
-      typeof movie.vote_average === 'number'
+      typeof movie.vote_average === "number"
         ? movie.vote_average.toFixed(1)
         : null,
   };
 }
 
-export async function GET(req: Request) {
-  // 1. Top Rated (cache 1 hour)
-  const topRatedRaw = await redis.get("all:topRated");
-  let topRated: Movie[];
-  if (typeof topRatedRaw === 'string') {
-    topRated = JSON.parse(topRatedRaw);
-  } else {
-    const topRatedRes = await fetch(
-      `${TMDB_BASE_URL}/movie/top_rated?language=en-US&page=1&api_key=${TMDB_API_KEY}`
-    );
-    const topRatedData = await topRatedRes.json();
-    topRated = Array.isArray(topRatedData.results)
-      ? [...topRatedData.results]
-      : [];
-    topRated = topRated
-      .sort(() => 0.5 - Math.random())
-      .slice(0, 12)
-      .map(mapMovie);
-    await redis.set("all:topRated", JSON.stringify(topRated));
-  }
-
-  // 2. New Releases (cache 1 hour)
-  const newReleasesRaw = await redis.get("all:newReleases");
-  let newReleases: Movie[];
-  if (typeof newReleasesRaw === 'string') {
-    newReleases = JSON.parse(newReleasesRaw);
-  } else {
-    const newReleaseRes = await fetch(
-      `${TMDB_BASE_URL}/discover/movie?language=en-US&page=1&api_key=${TMDB_API_KEY}`
-    );
-    const newReleaseData = await newReleaseRes.json();
-    newReleases = Array.isArray(newReleaseData.results)
-      ? [...newReleaseData.results]
-      : [];
-    const thisYear = new Date().getFullYear();
-    newReleases = newReleases
-      .filter((m: Movie) => {
-        const y = m.release_date ? parseInt(m.release_date.slice(0, 4)) : 0;
-        return y >= thisYear - 1;
-      })
-      .sort(() => 0.5 - Math.random())
-      .slice(0, 12)
-      .map(mapMovie);
-    await redis.set("all:newReleases", JSON.stringify(newReleases));
-  }
-
-  // 3. Popular (infinite scroll, cache per page for 1 hour)
-  const url = new URL(req.url);
-  const pageParam = url.searchParams.get("page");
-  const pageNum = pageParam ? parseInt(pageParam) : 1;
-  let popular: Movie[] = [];
-  type PopData = { results?: Movie[]; total_pages?: number };
-  let popData: PopData = {};
-  const popularCacheKey = `all:popular:page:${pageNum}`;
-  const popularRaw = await redis.get(popularCacheKey);
-  if (typeof popularRaw === 'string') {
-    const cached = JSON.parse(popularRaw);
-    popular = cached.popular;
-    popData.total_pages = cached.totalPages;
-  } else {
-    const popRes = await fetch(
-      `${TMDB_BASE_URL}/movie/popular?language=en-US&page=${pageNum}&api_key=${TMDB_API_KEY}`
-    );
-    popData = await popRes.json();
-    if (Array.isArray(popData.results)) {
-      popular = popData.results.map(mapMovie);
+async function fetchAndCache(
+  cacheKey: string,
+  fetchUrl: string,
+  mapFunction: (data: unknown) => Movie[],
+  expirySeconds: number
+): Promise<Movie[]> {
+  try {
+    const cachedData = await redis.get(cacheKey);
+    if (typeof cachedData === "string") {
+      console.log(`Returning data from cache for ${cacheKey}`);
+      return JSON.parse(cachedData);
     }
-    await redis.set(
-      popularCacheKey,
-      JSON.stringify({ popular, totalPages: popData.total_pages || 1000 }),
-      { ex: 60 * 60 }
-    ); // 1 hour
-  }
 
-  return NextResponse.json({
-    topRated,
-    newReleases,
-    popular,
-    page: pageNum,
-    totalPages: popData.total_pages || 1000,
-  });
+    const res = await fetch(fetchUrl);
+    if (!res.ok) {
+      throw new Error(
+        `Failed to fetch data from ${fetchUrl}: ${res.status} ${res.statusText}`
+      );
+    }
+
+    const data: unknown = await res.json();
+    const mappedData = mapFunction(data);
+
+    await redis.setex(cacheKey, expirySeconds, JSON.stringify(mappedData));
+    console.log(`Storing data in cache for ${cacheKey}`);
+    return mappedData;
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error(
+        `Error fetching or caching data for ${cacheKey}: ${error.message}`
+      );
+    } else {
+      console.error(`Unknown error fetching or caching data for ${cacheKey}`);
+    }
+    return [];
+  }
+}
+
+export async function GET(req: Request) {
+  try {
+    const topRated = await fetchAndCache(
+      "all:topRated",
+      `${TMDB_BASE_URL}/movie/top_rated?language=en-US&page=1&api_key=${process.env.TMDB_API_KEY}`,
+      (data: unknown) => {
+        if (
+          typeof data === "object" &&
+          data !== null &&
+          Array.isArray((data as { results?: Movie[] }).results)
+        ) {
+          return (data as { results: Movie[] }).results
+            .sort(() => 0.5 - Math.random())
+            .slice(0, 12)
+            .map(mapMovie);
+        }
+        return [];
+      },
+      3600 // 1 hour
+    );
+
+    const newReleases = await fetchAndCache(
+      "all:newReleases",
+      `${TMDB_BASE_URL}/discover/movie?language=en-US&page=1&api_key=${process.env.TMDB_API_KEY}`,
+      (data: unknown) => {
+        if (
+          typeof data === "object" &&
+          data !== null &&
+          Array.isArray((data as { results?: Movie[] }).results)
+        ) {
+          const thisYear = new Date().getFullYear();
+          return (data as { results: Movie[] }).results
+            .filter((m: Movie) => {
+              const y = m.release_date
+                ? parseInt(m.release_date.slice(0, 4))
+                : 0;
+              return y >= thisYear - 1;
+            })
+            .sort(() => 0.5 - Math.random())
+            .slice(0, 12)
+            .map(mapMovie);
+        }
+        return [];
+      },
+      3600 // 1 hour
+    );
+
+    const url = new URL(req.url);
+    const pageParam = url.searchParams.get("page");
+    const pageNum = pageParam ? parseInt(pageParam) : 1;
+    const popularCacheKey = `all:popular:page:${pageNum}`;
+
+    const popularData = await fetchAndCache(
+      popularCacheKey,
+      `${TMDB_BASE_URL}/movie/popular?language=en-US&page=${pageNum}&api_key=${process.env.TMDB_API_KEY}`,
+      (data: unknown) => {
+        if (
+          typeof data === "object" &&
+          data !== null &&
+          Array.isArray((data as { results?: Movie[] }).results)
+        ) {
+          return (data as { results: Movie[] }).results.map(mapMovie);
+        }
+        return [];
+      },
+      3600 // 1 hour
+    );
+
+    return NextResponse.json({
+      topRated,
+      newReleases,
+      popular: popularData,
+      page: pageNum,
+      totalPages: 1000,
+    });
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error("Error in GET handler:", error.message);
+    } else {
+      console.error("Unknown error in GET handler");
+    }
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
 }

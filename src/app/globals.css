@@ -6,7 +6,8 @@ body {
   min-width: 200px;
   overscroll-behavior-y: none;
   scroll-behavior: smooth;
-  user-select: none; /* Prevent text copying */
+ /* Prevent text copying */
+  background-color: black;
 }
 
 /* Allow selection inside form fields */

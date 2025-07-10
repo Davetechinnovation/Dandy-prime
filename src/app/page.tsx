@@ -240,7 +240,7 @@ export default function Home() {
             </div>
           ) : (
             <div className="flex items-center justify-center w-full h-full text-white text-xl">
-              Error Please refresh.
+              Error loading... Please refresh.
             </div>
           )}
         </AnimatePresence>
