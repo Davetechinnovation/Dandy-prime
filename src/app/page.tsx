@@ -10,7 +10,6 @@ import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import Movies from "./movies/page";
 
-
 import dynamic from "next/dynamic";
 
 const FlashScreen = dynamic(() => import("./Components/FlashScreen"), {
@@ -38,21 +37,30 @@ export default function Home() {
   // Show FlashScreen only if user reloads on / (not if they come from another route)
   const [showFlash, setShowFlash] = useState(() => {
     if (typeof window !== "undefined") {
-      // Only show splash if this is a reload on /
-      const nav = window.performance.getEntriesByType("navigation")[0] as
-        | PerformanceNavigationTiming
-        | undefined;
-      const isReload = nav && nav.type === "reload";
-      // Only set sessionStorage flag if on / and reloading
+      // Prefer PerformanceNavigationTiming, fallback to performance.navigation.type
+      let isReload = false;
+      const navEntry = window.performance.getEntriesByType("navigation")[0];
+      let nav: PerformanceNavigationTiming | undefined = undefined;
+      if (navEntry && "type" in navEntry) {
+        nav = navEntry as PerformanceNavigationTiming;
+      }
+      if (nav) {
+        isReload = nav.type === "reload";
+      } else if (
+        typeof (window.performance as { navigation?: { type?: number } })
+          .navigation !== "undefined" &&
+        (window.performance as { navigation?: { type?: number } }).navigation
+          ?.type === 1
+      ) {
+        isReload = true;
+      }
       if (window.location.pathname === "/" && isReload) {
         sessionStorage.setItem("dandyprime-flashscreen", "show");
         return true;
       }
-      // If not on /, clear the flag
       if (window.location.pathname !== "/") {
         sessionStorage.removeItem("dandyprime-flashscreen");
       }
-      // Only show if flag is set and on /
       return (
         window.location.pathname === "/" &&
         sessionStorage.getItem("dandyprime-flashscreen") === "show"

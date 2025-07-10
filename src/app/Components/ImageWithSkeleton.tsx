@@ -7,7 +7,7 @@ const ImageWithSkeleton: React.FC<ImageProps> = (props) => {
   const [imgError, setImgError] = useState(false);
 
   return (
-    <div className="relative w-full h-[120px] sm:h-[270px] rounded-t-lg overflow-hidden">
+    <div className="relative w-full h-[150px] sm:h-[270px] rounded-t-lg overflow-hidden">
       {!imgLoaded && !imgError && <Skeleton className="w-full h-full" />}
       {!imgError && (
         <Image
