@@ -98,7 +98,7 @@ const FlashScreen = ({ error }: FlashScreenProps) => {
             className="bg-blue-700 h-3 rounded-full absolute top-0 left-0 transition-all duration-75"
             style={{ width: `${progress}%` }}
           ></p>
-          <p className="text-gray-300 text-[14px] text-center font-medium p-2">
+          <p className="text-gray-200 text-[13px] text-center font-medium p-2">
             Loading...{progress}%
           </p>
         </div>

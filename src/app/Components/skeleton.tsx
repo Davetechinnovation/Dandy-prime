@@ -6,8 +6,7 @@ interface SkeletonProps {
 
 const Skeleton: React.FC<SkeletonProps> = ({ className = "" }) => (
   <div
-    className={`w-full h-[150px] sm:h-[350px] rounded-t-lg bg-gray-800 animate-pulse ${className}`}
-    style={{ minHeight: 150 }}
+    className={`w-full rounded-t-lg bg-gray-800 animate-pulse ${className}`}
   />
 );
 

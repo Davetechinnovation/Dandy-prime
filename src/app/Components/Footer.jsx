@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Heart, Home, ListVideo, Search } from "lucide-react";
+import { Trophy, Home, Bookmark, Search } from "lucide-react";
 import React from "react";
 import { usePathname } from "next/navigation";
 
@@ -12,41 +12,73 @@ const Footer = () => {
           <Link href="/">
             <p className="flex flex-col items-center group cursor-pointer">
               <span>
-                <Home className={`sm:w-6 sm:h-6 w-5 h-5 transition group-hover:text-blue-700 ${pathname === '/' ? 'text-blue-700' : 'text-white'}`} />
+                <Home
+                  className={`sm:w-6 sm:h-6 w-5 h-5 transition group-hover:text-blue-700 ${
+                    pathname === "/" ? "text-blue-700" : "text-white"
+                  }`}
+                />
               </span>
-              <span className={`text-sm sm:text-md transition group-hover:text-blue-700 ${pathname === '/' ? 'text-blue-700' : 'text-white'}`}>
+              <span
+                className={`text-sm sm:text-md transition group-hover:text-blue-700 ${
+                  pathname === "/" ? "text-blue-700" : "text-white"
+                }`}
+              >
                 Home
               </span>
             </p>
           </Link>
 
-          <Link href="/watchlist">
+          <Link href="/sports">
             <p className="flex flex-col items-center group cursor-pointer">
               <span>
-                <ListVideo className={`sm:w-6 sm:h-6 w-5 h-5 transition group-hover:text-blue-700 ${pathname === '/watchlist' ? 'text-blue-700' : 'text-white'}`} />
+                <Trophy
+                  className={`sm:w-6 sm:h-6 w-5 h-5 transition group-hover:text-blue-700 ${
+                    pathname === "/sports" ? "text-blue-700" : "text-white"
+                  }`}
+                />
               </span>
-              <span className={`text-sm sm:text-md transition group-hover:text-blue-700 ${pathname === '/watchlist' ? 'text-blue-700' : 'text-white'}`}>
-                Watch List
+              <span
+                className={`text-sm sm:text-md transition group-hover:text-blue-700 ${
+                  pathname === "/sports" ? "text-blue-700" : "text-white"
+                }`}
+              >
+                Sports
               </span>
             </p>
           </Link>
           <Link href="/search">
             <p className="flex flex-col items-center group cursor-pointer">
               <span>
-                <Search className={`sm:w-6 sm:h-6 w-5 h-5 transition group-hover:text-blue-700 ${pathname === '/search' ? 'text-blue-700' : 'text-white'}`} />
+                <Search
+                  className={`sm:w-6 sm:h-6 w-5 h-5 transition group-hover:text-blue-700 ${
+                    pathname === "/search" ? "text-blue-700" : "text-white"
+                  }`}
+                />
               </span>
-              <span className={`text-sm sm:text-md transition group-hover:text-blue-700 ${pathname === '/search' ? 'text-blue-700' : 'text-white'}`}>
+              <span
+                className={`text-sm sm:text-md transition group-hover:text-blue-700 ${
+                  pathname === "/search" ? "text-blue-700" : "text-white"
+                }`}
+              >
                 Search
               </span>
             </p>
           </Link>
-          <Link href="/favourite">
+          <Link href="/watchlist">
             <p className="flex flex-col items-center group cursor-pointer">
               <span>
-                <Heart className={`sm:w-6 sm:h-6 w-5 h-5 transition group-hover:text-blue-700 ${pathname === '/favourite' ? 'text-blue-700' : 'text-white'}`} />
+                <Bookmark
+                  className={`sm:w-6 sm:h-6 w-5 h-5 transition group-hover:text-blue-700 ${
+                    pathname === "/watchlist" ? "text-blue-700" : "text-white"
+                  }`}
+                />
               </span>
-              <span className={`text-sm sm:text-md transition group-hover:text-blue-700 ${pathname === '/favourite' ? 'text-blue-700' : 'text-white'}`}>
-                Favourite
+              <span
+                className={`text-sm sm:text-md transition group-hover:text-blue-700 ${
+                  pathname === "/watchlist" ? "text-blue-700" : "text-white"
+                }`}
+              >
+                Watchlist
               </span>
             </p>
           </Link>

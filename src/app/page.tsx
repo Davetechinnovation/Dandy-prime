@@ -1,14 +1,15 @@
 "use client";
+import BannerSkeleton from "./Components/BannerSkeleton";
 import { useContext } from "react";
 import { LayoutContext } from "./Providers";
 
 import Image from "next/image";
 import { Star, Bookmark, PlayCircle } from "lucide-react";
 import React, { useEffect, useState } from "react";
-import { useQuery } from '@tanstack/react-query';
+import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import Movies from "./movies/page";
-import Loader from "./Components/Loader";
+
 
 import dynamic from "next/dynamic";
 
@@ -18,9 +19,6 @@ const FlashScreen = dynamic(() => import("./Components/FlashScreen"), {
 const GlobalLoader = dynamic(() => import("./Components/globalloader"), {
   ssr: false,
 });
-
-// Track if Home has been visited in this session (resets on reload)
-let hasVisitedHome = false;
 
 type HeroMovie = {
   id: number;
@@ -37,27 +35,48 @@ export default function Home() {
   const { setHideLayout } = useContext(LayoutContext);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
-  // Only show flash/loader if not visited in this session
-  const [showFlash, setShowFlash] = useState(() => !hasVisitedHome);
-  const [showGlobalLoader, setShowGlobalLoader] = useState(
-    () => !hasVisitedHome
-  );
+  // Show FlashScreen only if user reloads on / (not if they come from another route)
+  const [showFlash, setShowFlash] = useState(() => {
+    if (typeof window !== "undefined") {
+      // Only show splash if this is a reload on /
+      const nav = window.performance.getEntriesByType("navigation")[0] as
+        | PerformanceNavigationTiming
+        | undefined;
+      const isReload = nav && nav.type === "reload";
+      // Only set sessionStorage flag if on / and reloading
+      if (window.location.pathname === "/" && isReload) {
+        sessionStorage.setItem("dandyprime-flashscreen", "show");
+        return true;
+      }
+      // If not on /, clear the flag
+      if (window.location.pathname !== "/") {
+        sessionStorage.removeItem("dandyprime-flashscreen");
+      }
+      // Only show if flag is set and on /
+      return (
+        window.location.pathname === "/" &&
+        sessionStorage.getItem("dandyprime-flashscreen") === "show"
+      );
+    }
+    return false;
+  });
+  const [showGlobalLoader, setShowGlobalLoader] = useState(false);
 
   // React Query for hero movies
   const { data: movies = [], isLoading: loading } = useQuery<HeroMovie[]>({
-    queryKey: ['heroMovies'],
+    queryKey: ["heroMovies"],
     queryFn: async () => {
       const res = await fetch("/api/home/hero");
-      if (!res.ok) throw new Error('Network response was not ok');
+      if (!res.ok) throw new Error("Network response was not ok");
       return res.json();
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
-  useEffect(() => {
-    if (!hasVisitedHome) {
-      hasVisitedHome = true;
-    }
-  }, []);
+
+  // Only show FlashScreen if this is a reload on /
+
+  // Always show FlashScreen on every reload of /
+  // No sessionStorage logic, always show splash
 
   useEffect(() => {
     if (!showFlash) return;
@@ -70,7 +89,7 @@ export default function Home() {
 
   useEffect(() => {
     // If flash screen is gone and still loading, show global loader
-    if (!showFlash && loading && !hasVisitedHome) {
+    if (!showFlash && loading) {
       setShowGlobalLoader(true);
     } else if (!loading) {
       setShowGlobalLoader(false);
@@ -121,11 +140,12 @@ export default function Home() {
   const nextMovie = movies[(currentIndex + 1) % movies.length];
   return (
     <div className="bg-black min-w-[320px] py-[68px] min-h-[100dvh]">
-      <div className="relative w-full h-[52vh] sm:h-[83vh] overflow-hidden">
+      <div className="relative w-full h-[54vh] sm:h-[82vh] overflow-hidden">
         <AnimatePresence mode="popLayout">
           {loading ? (
             <div className="flex items-center justify-center w-full h-full">
-              <Loader height={80} />
+              {/* Custom skeleton for banner */}
+              <BannerSkeleton />
             </div>
           ) : movies.length > 0 ? (
             <div>
@@ -138,18 +158,25 @@ export default function Home() {
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.7, ease: "easeInOut" }}
               >
-                <div className="w-full h-[50vh] sm:h-[80vh] aspect-[16/9] relative">
+                <div className="w-full h-[54vh] sm:h-[80vh] aspect-[16/9] relative">
+                  {/* Banner skeleton overlays the image while loading */}
+                  <BannerSkeleton />
                   {currentMovie?.image && (
                     <Image
                       src={currentMovie.image}
                       alt={currentMovie.title}
                       fill
-                      className=" object-cover"
+                      className="object-cover transition-opacity duration-700"
+                      style={{ zIndex: 1, opacity: 1 }}
                       priority
+                      onLoadingComplete={(img) => {
+                        img.style.opacity = "1";
+                        // Optionally, you could hide the skeleton here if you want to control it with state
+                      }}
                     />
                   )}
-                  <div className="absolute bottom-0 left-0 w-full h-full bg-black/[30%] flex items-end">
-                    <div className="text-white sm:px-10 px-3 sm:pb-10 pb-6  flex flex-col gap-2">
+                  <div className="absolute bottom-0 left-0 w-full h-full bg-black/[30%] flex items-end z-10">
+                    <div className="text-white sm:px-10 px-3 sm:pb-10 pb-3  flex flex-col gap-2">
                       <h1 className="sm:text-[50px] text-[25px] font-bold">
                         {currentMovie.title}
                       </h1>
@@ -192,7 +219,7 @@ export default function Home() {
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.7, ease: "easeInOut" }}
                 >
-                  <div className="w-full h-[50vh] sm:h-[80vh] aspect-[16/9] relative">
+                  <div className="w-full h-[54vh] sm:h-[80vh] aspect-[16/9] relative">
                     {nextMovie?.image && (
                       <Image
                         src={nextMovie.image}

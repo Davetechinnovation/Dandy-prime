@@ -12,13 +12,7 @@ const Nollywood = dynamic(() => import("../Nollywood/page"), { ssr: false });
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
-function AllTab({ onLoaded }: { onLoaded: () => void }) {
-  const { error, isLoading } = useSWR("/api/home/all", fetcher);
-  React.useEffect(() => {
-    if (!isLoading) onLoaded();
-  }, [isLoading, onLoaded]);
-  if (isLoading) return null; // Don't show inner loader, let global loader handle
-  if (error) return <div className="text-red-500">Failed to load</div>;
+function AllTab() {
   return <All />;
 }
 
@@ -66,7 +60,7 @@ const Page = () => {
 
       <div className="mt-6">
         <div style={{ display: activeTab === "All" ? "block" : "none" }}>
-          <AllTab onLoaded={() => {}} />
+          <AllTab />
         </div>
         <div style={{ display: activeTab === "Hollywood" ? "block" : "none" }}>
           <HollywoodTab />

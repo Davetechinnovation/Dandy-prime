@@ -7,21 +7,20 @@ const ImageWithSkeleton: React.FC<ImageProps> = (props) => {
   const [imgError, setImgError] = useState(false);
 
   return (
-    <div className="relative w-full h-[120px] sm:h-[250px] rounded-t-lg overflow-hidden">
-            {!imgLoaded && <Skeleton />}     {" "}
+    <div className="relative w-full h-[120px] sm:h-[270px] rounded-t-lg overflow-hidden">
+      {!imgLoaded && !imgError && <Skeleton className="w-full h-full" />}
       {!imgError && (
         <Image
           {...props}
+          unoptimized
           onLoad={() => setImgLoaded(true)}
           onError={() => setImgError(true)}
-          className={`${
-            props.className
-          } absolute top-0 left-0 w-full h-full object-cover transition-opacity duration-500 ${
+          className={`absolute top-0 left-0 w-full h-full object-cover transition-opacity duration-500 ${
             imgLoaded ? "opacity-100" : "opacity-0"
-          }`}
+          } ${props.className || ""}`}
+          alt="skeleton"
         />
       )}
-         {" "}
     </div>
   );
 };
