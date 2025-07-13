@@ -22,16 +22,16 @@ export function Providers({ children }: { children: React.ReactNode }) {
         // Request background sync for watchlist
         if (
           "sync" in reg &&
-          typeof (reg as any).sync?.register === "function"
+          typeof (reg.sync as { register?: (tag: string) => Promise<void> })?.register === "function"
         ) {
-          (reg as any).sync.register("sync-watchlist");
+          (reg.sync as { register: (tag: string) => Promise<void> }).register("sync-watchlist");
         }
         // Request periodic cache update (Chrome only)
         if (
           "periodicSync" in reg &&
-          typeof (reg as any).periodicSync?.register === "function"
+          typeof (reg.periodicSync as { register?: (tag: string, options?: { minInterval?: number }) => Promise<void> })?.register === "function"
         ) {
-          (reg as any).periodicSync.register("update-cache", {
+          (reg.periodicSync as { register: (tag: string, options?: { minInterval?: number }) => Promise<void> }).register("update-cache", {
             minInterval: 24 * 60 * 60 * 1000,
           });
         }

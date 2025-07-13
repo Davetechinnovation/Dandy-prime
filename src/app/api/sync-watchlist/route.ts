@@ -5,7 +5,8 @@ import redis from "@/lib/redis";
 // Type for a watchlist item
 interface WatchlistItem {
   id: string;
-  [key: string]: any;
+  // Use unknown for values, or specify expected fields
+  [key: string]: unknown;
 }
 
 // POST: Sync offline watchlist data to Redis
