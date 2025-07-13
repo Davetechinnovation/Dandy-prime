@@ -35,39 +35,27 @@ export default function Home() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   // Show FlashScreen only if user reloads on / (not if they come from another route)
-  const [showFlash, setShowFlash] = useState(() => {
+  // Show flashscreen immediately on first render (before content)
+  const [showFlash, setShowFlash] = useState(
+    () => typeof window === "undefined" || window.location.pathname === "/"
+  );
+
+  useEffect(() => {
     if (typeof window !== "undefined") {
-      // Prefer PerformanceNavigationTiming, fallback to performance.navigation.type
-      let isReload = false;
-      const navEntry = window.performance.getEntriesByType("navigation")[0];
-      let nav: PerformanceNavigationTiming | undefined = undefined;
-      if (navEntry && "type" in navEntry) {
-        nav = navEntry as PerformanceNavigationTiming;
-      }
-      if (nav) {
-        isReload = nav.type === "reload";
-      } else if (
-        typeof (window.performance as { navigation?: { type?: number } })
-          .navigation !== "undefined" &&
-        (window.performance as { navigation?: { type?: number } }).navigation
-          ?.type === 1
-      ) {
-        isReload = true;
-      }
-      if (window.location.pathname === "/" && isReload) {
+      if (window.location.pathname === "/") {
         sessionStorage.setItem("dandyprime-flashscreen", "show");
-        return true;
+        setShowFlash(true);
+        return;
       }
       if (window.location.pathname !== "/") {
         sessionStorage.removeItem("dandyprime-flashscreen");
       }
-      return (
+      setShowFlash(
         window.location.pathname === "/" &&
-        sessionStorage.getItem("dandyprime-flashscreen") === "show"
+          sessionStorage.getItem("dandyprime-flashscreen") === "show"
       );
     }
-    return false;
-  });
+  }, []);
   const [showGlobalLoader, setShowGlobalLoader] = useState(false);
 
   // React Query for hero movies
@@ -177,6 +165,7 @@ export default function Home() {
                       className="object-cover transition-opacity duration-700"
                       style={{ zIndex: 1, opacity: 1 }}
                       priority
+                      unoptimized
                       onLoadingComplete={(img) => {
                         img.style.opacity = "1";
                         // Optionally, you could hide the skeleton here if you want to control it with state
@@ -235,10 +224,11 @@ export default function Home() {
                         fill
                         className="object-cover"
                         priority
+                        unoptimized
                       />
                     )}
                     <div className="absolute bottom-0 left-0 w-full h-full bg-black/[30%] flex items-end">
-                      <div className="text-white sm:px-10 px-3 sm:pb-10 pb-6 pt-[69px] flex flex-col gap-2">
+                      <div className="text-white sm:px-10 px-3 sm:pb-10 pb-3 pt-[69px] flex flex-col gap-2">
                         <h1 className="sm:text-[50px] text-[25px] font-bold">
                           {nextMovie.title}
                         </h1>
