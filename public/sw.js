@@ -1,4 +1,3 @@
-
 // --- Constants ---
 const DB_NAME = "dandyprime-db";
 const DB_VERSION = 1;
@@ -18,17 +17,17 @@ function saveToIndexedDB(data) {
       db.createObjectStore(WATCHLIST_STORE, { keyPath: "id" });
     }
   };
-  request.onerror = function(event) {
+  request.onerror = function (event) {
     console.error("IndexedDB open error:", event.target.error);
   };
   request.onsuccess = function (event) {
     const db = event.target.result;
     const tx = db.transaction(WATCHLIST_STORE, "readwrite");
-    tx.onerror = function(event) {
+    tx.onerror = function (event) {
       console.error("IndexedDB transaction error:", event.target.error);
     };
     const store = tx.objectStore(WATCHLIST_STORE);
-    store.onerror = function(event) {
+    store.onerror = function (event) {
       console.error("IndexedDB store error:", event.target.error);
     };
     store.put(data);
@@ -41,19 +40,19 @@ function saveToIndexedDB(data) {
 function getAllWatchlistItems() {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
-    request.onerror = function(event) {
+    request.onerror = function (event) {
       console.error("IndexedDB open error:", event.target.error);
       reject(event.target.error);
     };
-    request.onsuccess = function(event) {
+    request.onsuccess = function (event) {
       const db = event.target.result;
       const tx = db.transaction(WATCHLIST_STORE, "readonly");
       const store = tx.objectStore(WATCHLIST_STORE);
       const getAllRequest = store.getAll();
-      getAllRequest.onsuccess = function() {
+      getAllRequest.onsuccess = function () {
         resolve(getAllRequest.result);
       };
-      getAllRequest.onerror = function(event) {
+      getAllRequest.onerror = function (event) {
         console.error("IndexedDB getAll error:", event.target.error);
         reject(event.target.error);
       };
@@ -66,23 +65,22 @@ function getAllWatchlistItems() {
  */
 function clearWatchlist() {
   const request = indexedDB.open(DB_NAME, DB_VERSION);
-  request.onerror = function(event) {
+  request.onerror = function (event) {
     console.error("IndexedDB open error:", event.target.error);
   };
-  request.onsuccess = function(event) {
+  request.onsuccess = function (event) {
     const db = event.target.result;
     const tx = db.transaction(WATCHLIST_STORE, "readwrite");
-    tx.onerror = function(event) {
+    tx.onerror = function (event) {
       console.error("IndexedDB transaction error:", event.target.error);
     };
     const store = tx.objectStore(WATCHLIST_STORE);
-    store.onerror = function(event) {
+    store.onerror = function (event) {
       console.error("IndexedDB store error:", event.target.error);
     };
     store.clear();
   };
 }
-
 
 // --- Listen for messages from client to save watchlist ---
 self.addEventListener("message", (event) => {
@@ -91,62 +89,63 @@ self.addEventListener("message", (event) => {
   }
 });
 
-
 // --- Background sync for watchlist ---
 self.addEventListener("sync", (event) => {
   if (event.tag === SYNC_WATCHLIST_TAG) {
     event.waitUntil(
       getAllWatchlistItems()
-        .then(watchlistData => {
+        .then((watchlistData) => {
           if (watchlistData && watchlistData.length > 0) {
-            return fetch('/api/sync-watchlist', {
-              method: 'POST',
+            return fetch("/api/sync-watchlist", {
+              method: "POST",
               headers: {
-                'Content-Type': 'application/json',
+                "Content-Type": "application/json",
                 // 'Authorization': 'Bearer ...' // Add if needed
               },
-              body: JSON.stringify(watchlistData)
-            })
-            .then(response => {
+              body: JSON.stringify(watchlistData),
+            }).then((response) => {
               if (!response.ok) {
-                console.error('Watchlist sync failed:', response.status, response.statusText);
+                console.error(
+                  "Watchlist sync failed:",
+                  response.status,
+                  response.statusText
+                );
                 throw new Error(`Sync failed: ${response.status}`);
               }
               return response.json();
             });
           } else {
-            console.log('No watchlist data to sync.');
+            console.log("No watchlist data to sync.");
             return Promise.resolve();
           }
         })
         .then(() => {
-          console.log('Watchlist synced successfully!');
+          console.log("Watchlist synced successfully!");
           return clearWatchlist();
         })
-        .catch(error => {
-          console.error('Error syncing watchlist:', error);
+        .catch((error) => {
+          console.error("Error syncing watchlist:", error);
           // Do NOT clear the watchlist here! Sync failed.
         })
     );
   }
 });
 
-
 // --- Periodic cache update ---
 self.addEventListener("periodicsync", (event) => {
   if (event.tag === "update-cache") {
     event.waitUntil(
-      caches.open(CACHE_NAME).then(cache => {
+      caches.open(CACHE_NAME).then((cache) => {
         // Add all frequently accessed resources
         return Promise.all([
-          cache.add('/'),
-          cache.add('/api/home/hero'),
-          cache.add('/api/home/all'),
-          cache.add('/api/home/search'),
-          cache.add('/api/home/bollywood'),
-          cache.add('/api/home/hollywood'),
-          cache.add('/api/home/nollywood'),
-          cache.add('/api/home/asian'),
+          cache.add("/"),
+          cache.add("/api/home/hero"),
+          cache.add("/api/home/all"),
+          cache.add("/api/home/search"),
+          cache.add("/api/home/bollywood"),
+          cache.add("/api/home/hollywood"),
+          cache.add("/api/home/nollywood"),
+          cache.add("/api/home/asian"),
           // Add more endpoints as needed
         ]);
       })
@@ -158,7 +157,8 @@ const CACHE_NAME = "dandyprime-cache-v2";
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
+    caches
+      .open(CACHE_NAME)
       .then((cache) => {
         // Cache all static assets in public folder
         return cache.addAll([
@@ -178,8 +178,8 @@ self.addEventListener("install", (event) => {
           // Add more as needed
         ]);
       })
-      .catch(error => {
-        console.error('Error caching static assets during install:', error);
+      .catch((error) => {
+        console.error("Error caching static assets during install:", error);
         // Optionally: throw error to fail installation, or proceed with limited cache
         // throw error;
       })
@@ -189,7 +189,8 @@ self.addEventListener("install", (event) => {
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys()
+    caches
+      .keys()
       .then((keys) => {
         return Promise.all(
           keys
@@ -197,8 +198,8 @@ self.addEventListener("activate", (event) => {
             .map((key) => caches.delete(key))
         );
       })
-      .catch(error => {
-        console.error('Error cleaning up old caches during activate:', error);
+      .catch((error) => {
+        console.error("Error cleaning up old caches during activate:", error);
       })
   );
   self.clients.claim();
