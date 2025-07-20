@@ -3,6 +3,12 @@ import React from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import MovieCard from "../Components/MovieCard";
 import Loader from "../Components/Loader";
+import { useNetworkRecovery } from "../hooks/useNetworkRecovery";
+import dynamic from "next/dynamic";
+
+const NetworkErrorPage = dynamic(() => import("../Components/NetworkErrorPage"), {
+  ssr: false,
+});
 
 type Movie = {
   id: number;
@@ -13,6 +19,7 @@ type Movie = {
 };
 
 const SearchPage = () => {
+  const { showNetworkError, retryRequests } = useNetworkRecovery();
   const [search, setSearch] = React.useState("");
   const [debounced, setDebounced] = React.useState("");
   const loader = React.useRef<HTMLDivElement | null>(null);
@@ -51,6 +58,10 @@ const SearchPage = () => {
     enabled: !debounced,
     staleTime: 1000 * 60 * 10,
     refetchOnWindowFocus: false,
+    retry: (failureCount) => {
+      if (!navigator.onLine) return false;
+      return failureCount < 3;
+    },
   });
 
   // Search infinite query
@@ -85,6 +96,10 @@ const SearchPage = () => {
     enabled: !!debounced,
     staleTime: 1000 * 60 * 10,
     refetchOnWindowFocus: false,
+    retry: (failureCount) => {
+      if (!navigator.onLine) return false;
+      return failureCount < 3;
+    },
   });
 
   // Infinite scroll effect
@@ -129,7 +144,9 @@ const SearchPage = () => {
     searchData?.pages?.flatMap((page) => page.results || []) || [];
 
   return (
-    <div className="min-h-screen text-white ">
+    <>
+      <NetworkErrorPage show={showNetworkError} onRetry={retryRequests} />
+      <div className="min-h-screen text-white ">
       <div className="sm:pt-[88px] pt-[99px] pb-36 sm:px-5 px-3 ">
         <div className="relative w-full">
           <div className="w-full ">
@@ -199,6 +216,7 @@ const SearchPage = () => {
         <div ref={loader} />
       </div>
     </div>
+    </>
   );
 };
 

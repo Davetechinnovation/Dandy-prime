@@ -66,12 +66,12 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie }) => {
         </p>
       </div>
       {showOverlay && (
-        <div className="w-full h-full bg-blue-700/5 absolute top-0 left-0 cursor-pointer rounded-lg transition-opacity duration-300 z-10">
+        <div className="w-full h-full bg-blue-700/15 absolute top-0 left-0 cursor-pointer rounded-lg transition-opacity duration-300 z-10">
           <div className="absolute top-2 right-2">
             <Bookmark className="w-5 h-5 cursor-pointer text-blue-700   " />
           </div>
           <div className="absolute bottom-[67px] left-1/2 -translate-x-1/2  ">
-            <button className="bg-blue-700 sm:px-7 px-3 py-[1px] rounded-full border-2 border-blue-700 hover:bg-transparent duration-500 transition-all cursor-pointer text-[11px] sm:text-base text-[white] hover:text-blue-700 flex gap-2 items-center ">
+            <button className="bg-blue-700 sm:px-7 px-3 py-[1px] rounded-full border-2 border-blue-700 hover:bg-transparent duration-500 transition-all cursor-pointer text-[12px] sm:text-base text-[white] hover:text-blue-700 flex gap-2 items-center ">
               {" "}
               <span>
                 <PlayCircle className=" w-3 sm:w-5 sm:h-5 h-3 cursor-pointer" />

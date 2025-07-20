@@ -1,7 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import MovieCard from "../Components/MovieCard";
-
 import Loader from "../Components/Loader";
 import Toprated from "./Toprated";
 import Popular from "./Popular";

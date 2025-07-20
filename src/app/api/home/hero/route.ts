@@ -97,7 +97,7 @@ export async function GET() {
           ? `https://image.tmdb.org/t/p/original${movie.backdrop_path}`
           : FALLBACK_IMAGE,
         year: movie.release_date ? movie.release_date.split("-")[0] : null,
-        rating: movie.vote_average,
+        rating: Number(movie.vote_average).toFixed(1),
         votes: movie.vote_count,
         language: movie.original_language,
         description: movie.overview,

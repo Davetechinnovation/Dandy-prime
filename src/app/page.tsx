@@ -2,14 +2,12 @@
 import BannerSkeleton from "./Components/BannerSkeleton";
 import { useContext } from "react";
 import { LayoutContext } from "./Providers";
-
 import Image from "next/image";
 import { Star, Bookmark, PlayCircle } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import Movies from "./movies/page";
-
 import dynamic from "next/dynamic";
 
 const FlashScreen = dynamic(() => import("./Components/FlashScreen"), {
@@ -34,28 +32,24 @@ export default function Home() {
   const { setHideLayout } = useContext(LayoutContext);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
-  // Show FlashScreen only if user reloads on / (not if they come from another route)
-  // Show flashscreen immediately on first render (before content)
-  const [showFlash, setShowFlash] = useState(
-    () => typeof window === "undefined" || window.location.pathname === "/"
-  );
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      if (window.location.pathname === "/") {
-        sessionStorage.setItem("dandyprime-flashscreen", "show");
-        setShowFlash(true);
-        return;
-      }
-      if (window.location.pathname !== "/") {
-        sessionStorage.removeItem("dandyprime-flashscreen");
-      }
-      setShowFlash(
-        window.location.pathname === "/" &&
-          sessionStorage.getItem("dandyprime-flashscreen") === "show"
-      );
-    }
-  }, []);
+  // Show FlashScreen only on direct load/refresh of / (not on navigation)
+  const [showFlash, setShowFlash] = useState(() => {
+    if (typeof window === "undefined") return false;
+    
+    // Only show if this is a direct load of home page
+    const isHomePage = window.location.pathname === "/";
+    
+    // Check if this is a page refresh (not navigation)
+    const isRefresh = performance.navigation?.type === 1;
+    
+    // Check if coming from another page on same site
+    const hasReferrer = document.referrer && document.referrer.includes(window.location.host);
+    
+    // Show flashscreen only if:
+    // 1. We're on home page AND
+    // 2. It's a page refresh OR direct visit (no referrer from same site)
+    return isHomePage && (isRefresh || !hasReferrer);
+  });
   const [showGlobalLoader, setShowGlobalLoader] = useState(false);
 
   // React Query for hero movies
