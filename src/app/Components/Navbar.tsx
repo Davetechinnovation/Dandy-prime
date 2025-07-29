@@ -66,7 +66,7 @@ const Section = () => {
       {/* Animated top-down mobile nav, only animating the blue menu */}
       {/* Always render overlay and menu for animation to work */}
       <div
-        className={`fixed inset-0 z-40 flex lg:hidden transition-opacity duration-300 ${
+        className={`fixed inset-0 z-40 flex lg:hidden transition-opacity duration-500 ${
           navOpen
             ? "bg-black/50 opacity-100 pointer-events-auto"
             : "bg-black/0 opacity-0 pointer-events-none"
