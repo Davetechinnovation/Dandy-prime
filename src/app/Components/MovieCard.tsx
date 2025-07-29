@@ -1,6 +1,7 @@
 import React from "react";
 import ImageWithSkeleton from "./ImageWithSkeleton";
 import { Star, Bookmark, PlayCircle } from "lucide-react";
+import Link from "next/link";
 
 export type Movie = {
   id: number;
@@ -71,13 +72,17 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie }) => {
             <Bookmark className="w-5 h-5 cursor-pointer text-blue-700   " />
           </div>
           <div className="absolute bottom-[67px] left-1/2 -translate-x-1/2  ">
-            <button className="bg-blue-700 sm:px-7 px-3 py-[1px] rounded-full border-2 border-blue-700 hover:bg-transparent duration-500 transition-all cursor-pointer text-[12px] sm:text-base text-[white] hover:text-blue-700 flex gap-2 items-center ">
-              {" "}
-              <span>
-                <PlayCircle className=" w-3 sm:w-5 sm:h-5 h-3 cursor-pointer" />
-              </span>{" "}
-              Watch
-            </button>
+            <Link href="/detail">
+              <button
+                onClick={(e) => e.stopPropagation()}
+                className="bg-blue-700 sm:px-7 px-3 py-[1px] rounded-full border-2 border-blue-700 hover:bg-transparent duration-500 transition-all cursor-pointer text-[12px] sm:text-base text-[white] hover:text-blue-700 flex gap-2 items-center "
+              >
+                <span>
+                  <PlayCircle className="w-3 sm:w-5 sm:h-5 h-3 cursor-pointer" />
+                </span>
+                Watch
+              </button>
+            </Link>
           </div>
         </div>
       )}

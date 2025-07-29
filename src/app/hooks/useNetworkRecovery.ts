@@ -36,10 +36,11 @@ export const useNetworkRecovery = () => {
           type: 'all'
         });
         
-        // Auto-refresh the page after a short delay to ensure fresh data
+        // Hide reconnected message after showing success
         setTimeout(() => {
-          window.location.reload();
-        }, 1000);
+          setShowReconnected(false);
+          setWasOffline(false);
+        }, 2000);
       }
     };
 

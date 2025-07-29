@@ -3,12 +3,7 @@ import React from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import MovieCard from "../Components/MovieCard";
 import Loader from "../Components/Loader";
-import { useNetworkRecovery } from "../hooks/useNetworkRecovery";
-import dynamic from "next/dynamic";
 
-const NetworkErrorPage = dynamic(() => import("../Components/NetworkErrorPage"), {
-  ssr: false,
-});
 
 type Movie = {
   id: number;
@@ -19,7 +14,7 @@ type Movie = {
 };
 
 const SearchPage = () => {
-  const { showNetworkError, retryRequests } = useNetworkRecovery();
+  // const { showNetworkError, retryRequests } = useNetworkRecovery();
   const [search, setSearch] = React.useState("");
   const [debounced, setDebounced] = React.useState("");
   const loader = React.useRef<HTMLDivElement | null>(null);
@@ -145,7 +140,7 @@ const SearchPage = () => {
 
   return (
     <>
-      <NetworkErrorPage show={showNetworkError} onRetry={retryRequests} />
+      {/* <NetworkErrorPage show={showNetworkError} onRetry={retryRequests} /> */}
       <div className="min-h-screen text-white ">
       <div className="sm:pt-[88px] pt-[99px] pb-36 sm:px-5 px-3 ">
         <div className="relative w-full">

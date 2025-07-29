@@ -15,7 +15,7 @@ const NetworkStatus = () => {
           initial={{ opacity: 0, y: -50 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -50 }}
-          className="fixed top-[68px] left-0 right-0 bg-red-600 text-white px-4 py-2 flex items-center justify-center gap-2 z-50"
+          className="fixed rounded-lg top-[68px] left-0 right-0 bg-red-600 text-white px-4 py-2 flex items-center justify-center gap-2 z-50"
         >
           <WifiOff className="w-4 h-4" />
           <span className="text-sm font-medium">You&apos;re offline</span>
@@ -40,7 +40,7 @@ const NetworkStatus = () => {
           className="fixed top-[68px] left-0 right-0 text-white px-4 py-2 flex items-center justify-center gap-2 z-50"
         >
           <Wifi className="w-4 h-4" />
-          <span className="text-sm font-medium">Back online - refreshing page...</span>
+          <span className="text-sm font-medium">Back online - updating content...</span>
         </motion.div>
       )}
     </AnimatePresence>
