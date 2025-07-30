@@ -187,8 +187,28 @@ const Page = () => {
           </div>
         </div>
       </div>
-      <div>
-        <h2 className="font-semi-bold">Metadata</h2>
+      <div className="px-3">
+        <h2 className="font-semibold border-b border-b-blue-700 pb-2 text-[23px] ">
+          Metadata
+        </h2>
+        <div className="border-b border-b-blue-700 py-2">
+          <p className="flex items-center justify-between max-w-[300px]   ">
+            <span>Released Date</span>
+            <span>2025-07-25</span>
+          </p>
+        </div>
+         <div className="border-b border-b-blue-700 py-2">
+          <p className="flex items-center justify-between max-w-[300px]   ">
+            <span>Runtime</span>
+            <span>500 minutes</span>
+          </p>
+        </div>
+         <div className="border-b border-b-blue-700 py-2">
+          <p className="flex items-center justify-between max-w-[300px]   ">
+            <span>Language</span>
+            <span>English</span>
+          </p>
+        </div>
       </div>
     </div>
   );
