@@ -143,7 +143,7 @@ const Page = () => {
           </div>
 
           <div>
-            <div className="flex items-center gap-1">
+            <div className="flex flex-wrap items-center gap-1">
               <p>5</p>
               <p className="w-[260px] h-[10px] relative  rounded-full bg-[#cecece] ">
                 <span className="w-[75%] rounded-full h-full bg-blue-700 absolute inset-0 "></span>

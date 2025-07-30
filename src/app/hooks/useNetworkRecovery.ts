@@ -14,6 +14,10 @@ export const useNetworkRecovery = () => {
     // Initialize online status safely
     try {
       setIsOnline(navigator.onLine);
+      if (!navigator.onLine) {
+        setShowNetworkError(true);
+        setHasNetworkError(true);
+      }
     } catch {
       // Fallback if navigator.onLine is not available
       setIsOnline(true);
