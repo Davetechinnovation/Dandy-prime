@@ -18,44 +18,46 @@ export function Providers({ children }: { children: React.ReactNode }) {
   // Register service worker for PWA/offline support and advanced features
   React.useEffect(() => {
     if (typeof window !== "undefined" && "serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/sw.js").then((reg) => {
-        // Request background sync for watchlist
-        if (
-          "sync" in reg &&
-          typeof (reg.sync as { register?: (tag: string) => Promise<void> })
-            ?.register === "function"
-        ) {
-          (reg.sync as { register: (tag: string) => Promise<void> }).register(
-            "sync-watchlist"
-          );
-        }
-        // Request periodic cache update (Chrome only)
-        if (
-          "periodicSync" in reg &&
-          typeof (
-            reg.periodicSync as {
-              register?: (
-                tag: string,
-                options?: { minInterval?: number }
-              ) => Promise<void>;
-            }
-          )?.register === "function"
-        ) {
-          (
-            reg.periodicSync as {
-              register: (
-                tag: string,
-                options?: { minInterval?: number }
-              ) => Promise<void>;
-            }
-          ).register("update-cache", {
-            minInterval: 24 * 60 * 60 * 1000,
-          });
-        }
-        // Listen for push notifications (scaffold)
-        if ("pushManager" in reg) {
-          // You would subscribe to push notifications here
-        }
+      navigator.serviceWorker.register("/sw.js").then(() => {
+        navigator.serviceWorker.ready.then((reg) => {
+          // Request background sync for watchlist
+          if (
+            "sync" in reg &&
+            typeof (reg.sync as { register?: (tag: string) => Promise<void> })
+              ?.register === "function"
+          ) {
+            (reg.sync as { register: (tag: string) => Promise<void> }).register(
+              "sync-watchlist"
+            );
+          }
+          // Request periodic cache update (Chrome only)
+          if (
+            "periodicSync" in reg &&
+            typeof (
+              reg.periodicSync as {
+                register?: (
+                  tag: string,
+                  options?: { minInterval?: number }
+                ) => Promise<void>;
+              }
+            )?.register === "function"
+          ) {
+            (
+              reg.periodicSync as {
+                register: (
+                  tag: string,
+                  options?: { minInterval?: number }
+                ) => Promise<void>;
+              }
+            ).register("update-cache", {
+              minInterval: 24 * 60 * 60 * 1000,
+            });
+          }
+          // Listen for push notifications (scaffold)
+          if ("pushManager" in reg) {
+            // You would subscribe to push notifications here
+          }
+        });
       });
     }
   }, []);

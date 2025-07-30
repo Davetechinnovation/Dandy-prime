@@ -128,62 +128,67 @@ const Page = () => {
         </div>
       </div>
 
-      <div className="sm:pt-[78px] px-4 ">
-        <div className="flex gap-7">
-          <div className="">
-            <h2 className="text-[25px] font-semibold">8.5</h2>
-            <p className="flex items-center gap-1">
-              <StarIcon className="w-4 h-4 fill-yellow-400 text-yellow-400 " />{" "}
-              <StarIcon className="w-4 h-4 fill-yellow-400 text-yellow-400 " />{" "}
-              <StarIcon className="w-4 h-4 fill-yellow-400 text-yellow-400 " />{" "}
-              <StarIcon className="w-4 h-4 fill-yellow-400 text-yellow-400 " />{" "}
-              <StarIcon className="w-4 h-4 fill-yellow-400 text-yellow-400 " />
-            </p>
-            <p>57625 (reviews)</p>
-          </div>
-
-          <div>
-            <div className="flex flex-wrap items-center gap-1">
-              <p>5</p>
-              <p className="w-[260px] h-[10px] relative  rounded-full bg-[#cecece] ">
-                <span className="w-[75%] rounded-full h-full bg-blue-700 absolute inset-0 "></span>
+      <div className=" small:pt-[0px] pt-[78px] px-4 ">
+        <div className="max-w-[490px] py-4">
+          <div className="grid grid-cols-2 sm:grid-cols-[1fr_2fr] sm:gap-  w-full">
+            <div className="">
+              <h2 className="text-[25px] font-semibold">8.5</h2>
+              <p className="flex items-center gap-1">
+                <StarIcon className="w-4 h-4 fill-yellow-400 text-yellow-400 " />{" "}
+                <StarIcon className="w-4 h-4 fill-yellow-400 text-yellow-400 " />{" "}
+                <StarIcon className="w-4 h-4 fill-yellow-400 text-yellow-400 " />{" "}
+                <StarIcon className="w-4 h-4 fill-yellow-400 text-yellow-400 " />{" "}
+                <StarIcon className="w-4 h-4 fill-yellow-400 text-yellow-400 " />
               </p>
-              <p>75%</p>
+              <p>57625 (reviews)</p>
             </div>
 
-            <div className="flex items-center gap-1">
-              <p>4</p>
-              <p className="w-[260px] h-[10px] relative  rounded-full bg-[#cecece] ">
-                <span className="w-[20%] rounded-full h-full bg-blue-700 absolute inset-0 "></span>
-              </p>
-              <p>20%</p>
-            </div>
+            <div>
+              <div className="flex items-center gap-1">
+                <p>5</p>
+                <p className="w-[260px] h-[10px] relative  rounded-full bg-[#cecece] ">
+                  <span className="w-[75%] rounded-full h-full bg-blue-700 absolute inset-0 "></span>
+                </p>
+                <p>75%</p>
+              </div>
 
-            <div className="flex items-center gap-1">
-              <p>3</p>
-              <p className="w-[260px] h-[10px] relative  rounded-full bg-[#cecece] ">
-                <span className="w-[10%] rounded-full h-full bg-blue-700 absolute inset-0 "></span>
-              </p>
-              <p>10%</p>
-            </div>
+              <div className="flex items-center gap-1">
+                <p>4</p>
+                <p className="w-[260px] h-[10px] relative  rounded-full bg-[#cecece] ">
+                  <span className="w-[20%] rounded-full h-full bg-blue-700 absolute inset-0 "></span>
+                </p>
+                <p>20%</p>
+              </div>
 
-            <div className="flex items-center gap-1">
-              <p>2</p>
-              <p className="w-[260px] h-[10px] relative  rounded-full bg-[#cecece] ">
-                <span className="w-[5%] rounded-full h-full bg-blue-700 absolute inset-0 "></span>
-              </p>
-              <p>5%</p>
-            </div>
+              <div className="flex items-center gap-1">
+                <p>3</p>
+                <p className="w-[260px] h-[10px] relative  rounded-full bg-[#cecece] ">
+                  <span className="w-[10%] rounded-full h-full bg-blue-700 absolute inset-0 "></span>
+                </p>
+                <p>10%</p>
+              </div>
 
-            <div className="flex items-center gap-1">
-              <p>1</p>
-              <p className="w-[260px] h-[10px] relative  rounded-full bg-[#cecece] ">
-                <span className="w-[2%] rounded-full h-full bg-blue-700 absolute inset-0 "></span>
-              </p>
-              <p>2%</p>
+              <div className="flex items-center gap-1">
+                <p>2</p>
+                <p className="w-[260px] h-[10px] relative  rounded-full bg-[#cecece] ">
+                  <span className="w-[5%] rounded-full h-full bg-blue-700 absolute inset-0 "></span>
+                </p>
+                <p>5%</p>
+              </div>
+
+              <div className="flex items-center gap-1">
+                <p>1</p>
+                <p className="w-[260px] h-[10px] relative  rounded-full bg-[#cecece] ">
+                  <span className="w-[2%] rounded-full h-full bg-blue-700 absolute inset-0 "></span>
+                </p>
+                <p>2%</p>
+              </div>
             </div>
           </div>
         </div>
+      </div>
+      <div>
+        <h2 className="font-semi-bold">Metadata</h2>
       </div>
     </div>
   );
