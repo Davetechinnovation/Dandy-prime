@@ -1,5 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+interface TmdbMovie {
+  id: number;
+  title: string;
+  poster_path?: string;
+  release_date?: string;
+  vote_average: number;
+}
+
 const TMDB_API_KEY = process.env.TMDB_API_KEY;
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 
@@ -15,7 +23,7 @@ export async function GET(req: NextRequest) {
     if (!res.ok) throw new Error('Failed to fetch movies by genre');
     const json = await res.json();
     // Map TMDB results to your Movie type
-    const results = (json.results || []).map((movie: any) => ({
+    const results = (json.results || []).map((movie: TmdbMovie) => ({
       id: movie.id,
       title: movie.title,
       image: movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : null,
@@ -28,7 +36,7 @@ export async function GET(req: NextRequest) {
       totalPages: json.total_pages,
       page: json.page,
     });
-  } catch (err) {
+  } catch {
     return NextResponse.json({ error: 'Failed to fetch movies by genre' }, { status: 500 });
   }
 }
