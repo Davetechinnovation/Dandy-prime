@@ -512,13 +512,40 @@ const Page = () => {
       </section>
       <section className="px-3" >
         <h2 className="text-[25px] font-semibold my-4  border-b-2 max-w-[350px] border-b-blue-700 " >Recommended after watching</h2>
-        <div>
+        <div className="flex items-center gap-3 overflow-x-auto">
           <div className="max-w-[200px] min-w-[150px]">
             <Image
               src="/images/straw.webp"
               alt="dandy-prime-image "
               width={200}
               height={200}
+              unoptimized
+            />
+            <p className="flex gap-3 items-center justify-between">
+              <span>Straw</span>
+              <span>2025</span>
+            </p>
+          </div>
+           <div className="max-w-[200px] min-w-[150px]">
+            <Image
+              src="/images/straw.webp"
+              alt="dandy-prime-image "
+              width={200}
+              height={200}
+              unoptimized
+            />
+            <p className="flex gap-3 items-center justify-between">
+              <span>Straw</span>
+              <span>2025</span>
+            </p>
+          </div>
+           <div className="max-w-[200px] min-w-[150px]">
+            <Image
+              src="/images/straw.webp"
+              alt="dandy-prime-image "
+              width={200}
+              height={200}
+              unoptimized
             />
             <p className="flex gap-3 items-center justify-between">
               <span>Straw</span>
@@ -526,6 +553,8 @@ const Page = () => {
             </p>
           </div>
         </div>
+        <h2 className="text-[25px] font-semibold my-4  border-b-2 max-w-[350px] border-b-blue-700 " >Similar Movies</h2>
+        <div></div>
       </section>
     </main>
   );
