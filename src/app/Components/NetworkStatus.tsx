@@ -3,7 +3,7 @@ import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Wifi, WifiOff } from "lucide-react";
 import { useNetworkRecovery } from "../hooks/useNetworkRecovery";
-import { div } from "framer-motion/client";
+
 
 const NetworkStatus = () => {
   const { isOnline, showReconnected } = useNetworkRecovery();
