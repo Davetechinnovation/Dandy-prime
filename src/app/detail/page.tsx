@@ -495,7 +495,7 @@ const Page = () => {
         <h2 className="text-[25px] font-semibold  my-4 border-b-2 border-b-blue-700 max-w-[50px] w-full ">
           Keywords
         </h2>
-        <div className="flex items-center gap-3 ">
+        <div className="flex flex-wrap items-center gap-3 ">
           <p className="px-10 py-[5px] cursor-pointer bg-blue-700 rounded-3xl hover:bg-transparent border-2 border-blue-700 duration-500 transition-all hover:text-blue-700">
             Adventure
           </p>
