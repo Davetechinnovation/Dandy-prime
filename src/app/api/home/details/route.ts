@@ -52,8 +52,8 @@ interface FinalResponse {
   release_date: string;
   runtime: number;
   language: string;
-  genres: string[];
-  keywords: string[];
+  genres: { id: number; name: string }[];
+  keywords: { id: number; name: string }[];
   trailer: Video | null;
   reviews_count: number;
   main_cast: Cast[];
@@ -157,16 +157,19 @@ async function refreshAndCache(movieId: string, cacheKey: string): Promise<Final
     (v: Video) => v.type === 'Trailer' && v.site === 'YouTube'
   ) || null;
 
-  // Extract main cast (top 8)
-  const mainCast: Cast[] = creditsRes?.cast?.slice(0, 8).map((c: Cast) => ({
-    name: c.name,
-    profile_path: c.profile_path,
-    character: c.character,
-  })) || [];
+  // Extract main cast (top 8, only with images)
+  const mainCast: Cast[] = creditsRes?.cast
+    ?.filter((c: Cast) => c.profile_path)
+    .slice(0, 8)
+    .map((c: Cast) => ({
+      name: c.name,
+      profile_path: c.profile_path,
+      character: c.character,
+    })) || [];
 
   // Extract genres, keywords, recommendations, similar
-  const genres = details.genres?.map((g: Genre) => g.name) || [];
-  const keywordsList = keywordsRes?.keywords?.map((k: Keyword) => k.name) || [];
+  const genres = details.genres?.map((g: Genre) => ({ id: g.id, name: g.name })) || [];
+  const keywordsList = keywordsRes?.keywords?.map((k: Keyword) => ({ id: k.id, name: k.name })) || [];
   const recommendationsList = recommendationsRes?.results?.slice(0, 8) || [];
   const similarList = similarRes?.results?.slice(0, 8) || [];
 

@@ -2,7 +2,6 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import MovieCard from "../Components/MovieCard";
-
 import TopRated from "./TopRated";
 import Popular from "./Popular";
 import Loader from "../Components/Loader";

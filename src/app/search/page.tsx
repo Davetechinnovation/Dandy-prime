@@ -172,7 +172,7 @@ const SearchPage = () => {
                 </div>
               ) : (
                 searchMovies.map((movie) => (
-                  <MovieCard key={movie.id} movie={movie} />
+                  <MovieCard key={movie.id ? String(movie.id) : movie.title} movie={movie} />
                 ))
               )}
             </div>
@@ -198,7 +198,7 @@ const SearchPage = () => {
                 </div>
               ) : (
                 trendingMovies.map((movie) => (
-                  <MovieCard key={movie.id} movie={movie} />
+                  <MovieCard key={movie.id ? String(movie.id) : movie.title} movie={movie} />
                 ))
               )}
             </div>

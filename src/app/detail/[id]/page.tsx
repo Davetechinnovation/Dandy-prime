@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-// import Link from "next/link"; // Removed unused import
+import Link from "next/link";
 import {
   AlertTriangleIcon,
   ArrowLeft,
@@ -29,6 +29,7 @@ interface Video {
   type: string;
 }
 
+interface GenreOrKeyword { id: number; name: string; }
 interface MovieDetails {
   id: number;
   title: string;
@@ -39,8 +40,8 @@ interface MovieDetails {
   release_date: string;
   runtime: number;
   language: string;
-  genres: string[];
-  keywords: string[];
+  genres: GenreOrKeyword[];
+  keywords: GenreOrKeyword[];
   trailer: Video | null;
   reviews_count: number;
   main_cast: Cast[];
@@ -56,7 +57,7 @@ import Loader2 from "../../Components/Loader2";
 export default function DetailPage() {
   const router = useRouter();
   const params = useParams();
-  const id = params?.id as string;
+  const id = params.id as string;
   const [data, setData] = useState<MovieDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -227,8 +228,8 @@ export default function DetailPage() {
       </section>
 
       <section className=" small:pt-[0px] pt-[78px] px-4 ">
-        <div className="max-w-[490px] py-4">
-          <div className="grid grid-cols-2 sm:grid-cols-[1fr_2fr] sm:gap-  w-full">
+        <div className=" max-w-[400px] w-full py-4">
+          <div className=" grid grid-cols-[1fr_2fr] w-full">
             <div className="">
               <h2 className="text-[25px] font-semibold">{data.rating}</h2>
               <p className="flex items-center gap-1">
@@ -246,7 +247,7 @@ export default function DetailPage() {
                 <span className="text-sm text-gray-300">Rating</span>
                 <span className="text-sm font-bold">{data.rating}/10</span>
               </div>
-              <div className="w-[260px] flex gap-2 items-center h-[10px] relative rounded-full bg-[#cecece] mt-2">
+              <div className="max-w-[260px] w-full flex gap-2 items-center h-[10px] relative rounded-full bg-[#cecece] mt-2">
                 <span
                   className="rounded-full h-full bg-blue-700 absolute inset-0"
                   style={{
@@ -289,12 +290,13 @@ export default function DetailPage() {
         </h2>
         <div className="flex flex-wrap items-center gap-3 ">
           {data.genres.map((genre) => (
-            <p
-              key={genre}
+            <Link
+              key={String(genre.id)}
+              href={`/search/genre/${genre.id}?name=${encodeURIComponent(genre.name)}`}
               className="px-10 py-[5px] cursor-pointer bg-blue-700 rounded-3xl hover:bg-transparent border-2 border-blue-700 duration-500 transition-all hover:text-blue-700"
             >
-              {genre}
-            </p>
+              {genre.name}
+            </Link>
           ))}
         </div>
         <p className="text-white opacity-40 pt-3 ">
@@ -311,7 +313,7 @@ export default function DetailPage() {
         </h2>
         <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar">
           {data.main_cast.map((cast, idx) => (
-            <div key={idx} className="min-w-[100px]  max-w-[150px]  ">
+            <div key={cast.name + '-' + cast.character + '-' + idx} className="min-w-[100px]  max-w-[150px]  ">
               {cast.profile_path ? (
                 <Image
                   src={imageBase + cast.profile_path}
@@ -336,24 +338,25 @@ export default function DetailPage() {
         </h2>
         <div className="flex flex-wrap items-center gap-3 ">
           {data.keywords.map((kw) => (
-            <p
-              key={kw}
+            <Link
+              key={String(kw.id)}
+              href={`/search/keyword/${kw.id}?name=${encodeURIComponent(kw.name)}`}
               className="px-10 py-[5px] cursor-pointer bg-blue-700 rounded-3xl hover:bg-transparent border-2 border-blue-700 duration-500 transition-all hover:text-blue-700"
             >
-              {kw}
-            </p>
+              {kw.name}
+            </Link>
           ))}
         </div>
       </section>
       <section className="px-3">
-        <h2 className="text-[25px] font-semibold my-4  border-b-2 max-w-[350px] border-b-blue-700 ">
+        <h2 className="text-[25px] font-semibold my-4  border-b-2 max-w-[250px] border-b-blue-700 ">
           Recommended after watching
         </h2>
         <div className="flex items-center gap-3 overflow-x-auto hide-scrollbar">
           {data.recommendations.map((rec) => {
             const movie = rec as MovieDetails;
             return (
-              <div key={movie.id} className="min-w-[100px] w-[150px] ">
+              <div key={String(movie.id)} className="min-w-[100px] w-[150px] ">
                 {movie.poster_path ? (
                   <Image
                     src={imageBase + movie.poster_path}
@@ -381,7 +384,7 @@ export default function DetailPage() {
           {data.similar.map((sim) => {
             const movie = sim as MovieDetails;
             return (
-              <div key={movie.id} className="min-w-[100px] w-[150px] ">
+              <div key={String(movie.id)} className="min-w-[100px] w-[150px] ">
                 {movie.poster_path ? (
                   <Image
                     src={imageBase + movie.poster_path}
