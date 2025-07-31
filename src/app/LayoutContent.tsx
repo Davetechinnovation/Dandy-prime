@@ -18,7 +18,6 @@ export default function LayoutContent({
     <>
       {!hideLayout && <Navbar />}
       <NetworkStatus />
-      <NetworkErrorPage show={showNetworkError} onRetry={retryRequests} />
       {children}
       {!hideLayout && <Footer />}
     </>

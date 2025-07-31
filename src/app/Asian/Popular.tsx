@@ -51,21 +51,23 @@ const Popular = () => {
   }, [isValidating, setSize, isReachingEnd]);
 
   return (
-    <div>
+    <section>
       <div className="text-white -translate-y-10 sm:px-5 px-[4px] ">
         <h2 className="sm:text-[30px] text-[23px] font-semibold py-4 ">
           Popular
         </h2>
-        <div className="px-2 grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-[15px]">
+        <ul className="px-2 grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-[15px]">
           {movies.length === 0 && (
-            <div className="col-span-3 md:col-span-6 text-center text-gray-400 py-8">
+            <li className="col-span-3 md:col-span-6 text-center text-gray-400 py-8">
               No popular movies found.
-            </div>
+            </li>
           )}
           {movies.map((movie) => (
-            <MovieCard key={movie.id} movie={movie} />
+            <li key={movie.id}>
+              <MovieCard movie={movie} />
+            </li>
           ))}
-        </div>
+        </ul>
         <div ref={loaderRef} className="w-full flex justify-center py-4">
           {isValidating && <Loader height={60} />}
           {isReachingEnd && (
@@ -73,7 +75,7 @@ const Popular = () => {
           )}
         </div>
       </div>
-    </div>
+    </section>
   );
 };
 

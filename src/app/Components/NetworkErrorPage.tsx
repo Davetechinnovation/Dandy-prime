@@ -1,5 +1,5 @@
 "use client";
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Play, WifiOff } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -9,6 +9,15 @@ type NetworkErrorPageProps = {
 };
 
 const NetworkErrorPage = ({ show, onRetry }: NetworkErrorPageProps) => {
+  useEffect(() => {
+    if (!show || !onRetry) return;
+    const handleOnline = () => {
+      onRetry();
+    };
+    window.addEventListener('online', handleOnline);
+    return () => window.removeEventListener('online', handleOnline);
+  }, [show, onRetry]);
+
   if (!show) return null;
 
   return (

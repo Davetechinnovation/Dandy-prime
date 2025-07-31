@@ -30,23 +30,25 @@ const Toprated = () => {
   if (error) return <div className="text-red-500">Failed to load</div>;
 
   return (
-    <div>
+    <section>
       <div className="text-white pb-10 lg:pb-0 -translate-y-10 sm:px-5 px-[4px] ">
         <h2 className="sm:text-[30px] text-[23px] font-semibold py-4 ">
           Top Rated
         </h2>
-        <div className="px-2 grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-[15px]">
+        <ul className="px-2 grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-[15px]">
           {topRated.length === 0 && (
-            <div className="col-span-3 md:col-span-6 text-center text-gray-400 py-8">
+            <li className="col-span-3 md:col-span-6 text-center text-gray-400 py-8">
               No top rated movies found.
-            </div>
+            </li>
           )}
           {topRated.map((movie) => (
-            <MovieCard key={movie.id} movie={movie} />
+            <li key={movie.id}>
+              <MovieCard movie={movie} />
+            </li>
           ))}
-        </div>
+        </ul>
       </div>
-    </div>
+    </section>
   );
 };
 
