@@ -10,6 +10,7 @@ type Movie = {
   image: string | null;
   year: string | null;
   rating: number;
+  media_type?: string;
 };
 
 const TopRated = () => {
@@ -38,7 +39,13 @@ const TopRated = () => {
         ) : (
           <div className="px-2 grid grid-cols-3 md:grid-cols-6 gap-2 sm:gap-[15px] ">
             {topRated.map((movie) => (
-              <MovieCard key={movie.id} movie={movie} />
+              <MovieCard
+                key={movie.id}
+                movie={{
+                  ...movie,
+                  media_type: movie.media_type === "tv" ? "tv" : "movie",
+                }}
+              />
             ))}
           </div>
         )}

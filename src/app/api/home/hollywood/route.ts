@@ -91,31 +91,60 @@ async function fetchAndMergeContent<T>({
   }
   try {
     const allContent: ContentItem[] = [];
+    
+    // Fetch both movies and TV shows for each country
     for (const country of HOLLYWOOD_COUNTRIES) {
-      const url = buildTmdbUrl("/discover/movie", {
+      // Fetch movies
+      const movieUrl = buildTmdbUrl("/discover/movie", {
         sort_by: sortBy,
         language: "en-US",
         page,
         with_origin_country: country,
       });
-      const fullUrl = url + filters;
-      let movieRes, movieData;
+      const fullMovieUrl = movieUrl + filters;
+      
+      // Fetch TV shows
+      const tvUrl = buildTmdbUrl("/discover/tv", {
+        sort_by: sortBy,
+        language: "en-US",
+        page,
+        with_origin_country: country,
+      });
+      const fullTvUrl = tvUrl + filters;
+
       try {
-        movieRes = await fetch(fullUrl, {
+        // Fetch movies
+        const movieRes = await fetch(fullMovieUrl, {
           headers: { "Content-Type": "application/json" },
         });
-        movieData = await movieRes.json();
+        const movieData = await movieRes.json();
+        
+        if (Array.isArray(movieData?.results)) {
+          allContent.push(
+            ...movieData.results.map((item: ContentItem) => ({
+              ...item,
+              media_type: "movie",
+            }))
+          );
+        }
+
+        // Fetch TV shows
+        const tvRes = await fetch(fullTvUrl, {
+          headers: { "Content-Type": "application/json" },
+        });
+        const tvData = await tvRes.json();
+        
+        if (Array.isArray(tvData?.results)) {
+          allContent.push(
+            ...tvData.results.map((item: ContentItem) => ({
+              ...item,
+              media_type: "tv",
+            }))
+          );
+        }
       } catch (error) {
         console.error(`TMDB fetch error for country ${country}:`, error);
         throw error;
-      }
-      if (Array.isArray(movieData?.results)) {
-        allContent.push(
-          ...movieData.results.map((item: ContentItem) => ({
-            ...item,
-            media_type: "movie",
-          }))
-        );
       }
     }
     // Deduplicate by id and filter out items with no poster

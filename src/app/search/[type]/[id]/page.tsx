@@ -13,6 +13,7 @@ interface Movie {
   image: string | null;
   year: string | null;
   rating: number;
+  media_type?: string;
 }
 
 const SearchByTypePage = () => {
@@ -24,7 +25,7 @@ const SearchByTypePage = () => {
   const name = searchParams.get("name") || "";
   const loader = React.useRef<HTMLDivElement | null>(null);
 
-    const handleBack = () => {
+  const handleBack = () => {
     if (window.history.length > 1) {
       router.back();
     } else {
@@ -106,7 +107,15 @@ const SearchByTypePage = () => {
               No results found.
             </div>
           ) : (
-            movies.map((movie) => <MovieCard key={movie.id} movie={movie} />)
+            movies.map((movie) => (
+              <MovieCard
+                key={movie.id ? String(movie.id) : movie.title}
+                movie={{
+                  ...movie,
+                  media_type: movie.media_type === "tv" ? "tv" : "movie",
+                }}
+              />
+            ))
           )}
         </div>
         {isFetchingNextPage && <Loader height={60} />}

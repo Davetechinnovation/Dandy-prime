@@ -14,7 +14,7 @@ interface Movie {
   video?: boolean;
 }
 
-function mapMovie(movie: Movie) {
+function mapMovie(movie: Movie, mediaType: string) {
   return {
     id: movie.id,
     title: movie.title || movie.name || "",
@@ -30,6 +30,7 @@ function mapMovie(movie: Movie) {
       typeof movie.vote_average === "number"
         ? movie.vote_average.toFixed(1)
         : null,
+    media_type: mediaType,
   };
 }
 
@@ -73,24 +74,47 @@ async function fetchAndCache(
 
 export async function GET(req: Request) {
   try {
-    const topRated = await fetchAndCache(
-      "all:topRated",
-      `${TMDB_BASE_URL}/movie/top_rated?language=en-US&page=1&api_key=${process.env.TMDB_API_KEY}`,
-      (data: unknown) => {
-        if (
-          typeof data === "object" &&
-          data !== null &&
-          Array.isArray((data as { results?: Movie[] }).results)
-        ) {
-          return (data as { results: Movie[] }).results
-            .sort(() => 0.5 - Math.random())
-            .slice(0, 12)
-            .map(mapMovie);
-        }
-        return [];
-      },
-      3600 // 1 hour
-    );
+    // Fetch both top-rated movies and TV shows
+    const [topRatedMovies, topRatedTV] = await Promise.all([
+      fetchAndCache(
+        "all:topRated:movies",
+        `${TMDB_BASE_URL}/movie/top_rated?language=en-US&page=1&api_key=${process.env.TMDB_API_KEY}`,
+        (data: unknown) => {
+          if (
+            typeof data === "object" &&
+            data !== null &&
+            Array.isArray((data as { results?: Movie[] }).results)
+          ) {
+            return (data as { results: Movie[] }).results
+              .sort(() => 0.5 - Math.random())
+              .slice(0, 6)
+              .map((movie) => mapMovie(movie, "movie"));
+          }
+          return [];
+        },
+        3600 // 1 hour
+      ),
+      fetchAndCache(
+        "all:topRated:tv",
+        `${TMDB_BASE_URL}/tv/top_rated?language=en-US&page=1&api_key=${process.env.TMDB_API_KEY}`,
+        (data: unknown) => {
+          if (
+            typeof data === "object" &&
+            data !== null &&
+            Array.isArray((data as { results?: Movie[] }).results)
+          ) {
+            return (data as { results: Movie[] }).results
+              .sort(() => 0.5 - Math.random())
+              .slice(0, 6)
+              .map((movie) => mapMovie(movie, "tv"));
+          }
+          return [];
+        },
+        3600 // 1 hour
+      )
+    ]);
+    
+    const topRated = [...topRatedMovies, ...topRatedTV].sort(() => 0.5 - Math.random());
 
     const newReleases = await fetchAndCache(
       "all:newReleases",
@@ -111,7 +135,7 @@ export async function GET(req: Request) {
             })
             .sort(() => 0.5 - Math.random())
             .slice(0, 12)
-            .map(mapMovie);
+            .map((movie) => mapMovie(movie, "movie"));
         }
         return [];
       },
@@ -132,7 +156,7 @@ export async function GET(req: Request) {
           data !== null &&
           Array.isArray((data as { results?: Movie[] }).results)
         ) {
-          return (data as { results: Movie[] }).results.map(mapMovie);
+          return (data as { results: Movie[] }).results.map((movie) => mapMovie(movie, "movie"));
         }
         return [];
       },

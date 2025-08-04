@@ -5,33 +5,40 @@ const TMDB_API_BASE_URL =
 import { NextResponse } from "next/server";
 import redis from "@/lib/redis";
 
-// Raw TMDB API movie type
-interface TMDBMovie {
+interface ContentItem {
   id: number;
-  title: string;
-  poster_path: string | null;
-  release_date: string | null;
-  vote_average: number;
+  title?: string;
+  name?: string;
+  poster_path?: string | null;
+  release_date?: string | null;
+  first_air_date?: string | null;
+  vote_average?: number;
+  media_type?: string;
 }
 
-// Transformed card type for frontend
 interface PosterCard {
   id: number;
   title: string;
   image: string | null;
   year: string | null;
   rating: number;
+  media_type: string;
 }
 
-function movieToPosterCard(movie: TMDBMovie): PosterCard {
+function mapContent(item: ContentItem): PosterCard {
   return {
-    id: movie.id,
-    title: movie.title,
-    image: movie.poster_path
-      ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+    id: item.id,
+    title: item.title || item.name || "",
+    image: item.poster_path
+      ? `https://image.tmdb.org/t/p/w500${item.poster_path}`
       : null,
-    year: movie.release_date ? movie.release_date.slice(0, 4) : null,
-    rating: movie.vote_average,
+    year: item.release_date
+      ? item.release_date.slice(0, 4)
+      : item.first_air_date
+      ? item.first_air_date.slice(0, 4)
+      : null,
+    rating: item.vote_average || 0,
+    media_type: item.media_type || (item.title ? "movie" : "tv"),
   };
 }
 
@@ -63,26 +70,51 @@ export async function GET(request: Request) {
       );
     }
 
-    const url = `${TMDB_API_BASE_URL}/trending/movie/day?language=en-US&page=${page}&api_key=${apiKey}`;
-    const res = await fetch(url);
-    if (!res.ok) {
-      console.error("TMDB API error:", res.status, await res.text());
+    // Fetch both trending movies and TV shows
+    const movieUrl = `${TMDB_API_BASE_URL}/trending/movie/day?language=en-US&page=${page}&api_key=${apiKey}`;
+    const tvUrl = `${TMDB_API_BASE_URL}/trending/tv/day?language=en-US&page=${page}&api_key=${apiKey}`;
+
+    const [movieRes, tvRes] = await Promise.all([
+      fetch(movieUrl),
+      fetch(tvUrl)
+    ]);
+
+    if (!movieRes.ok || !tvRes.ok) {
+      console.error("TMDB API error:", {
+        movieStatus: movieRes.status,
+        tvStatus: tvRes.status
+      });
       return NextResponse.json(
-        { error: "Failed to fetch trending movies" },
+        { error: "Failed to fetch trending content" },
         { status: 500 }
       );
     }
-    const data = await res.json();
-    const movies: TMDBMovie[] = data.results || [];
-    const posterCards: PosterCard[] = movies
-      .filter((m) => m.poster_path)
-      .map(movieToPosterCard);
+
+    const [movieData, tvData] = await Promise.all([
+      movieRes.json(),
+      tvRes.json()
+    ]);
+
+    const allContent = [
+      ...(movieData.results || []).map((item: ContentItem) => ({
+        ...item,
+        media_type: "movie"
+      })),
+      ...(tvData.results || []).map((item: ContentItem) => ({
+        ...item,
+        media_type: "tv"
+      }))
+    ];
+
+    const posterCards: PosterCard[] = allContent
+      .filter((item) => item.poster_path)
+      .map(mapContent);
     const response = {
       trending: posterCards,
-      page: data.page,
-      totalPages: data.total_pages,
-      totalResults: data.total_results,
-      hasNextPage: data.page < data.total_pages,
+      page: page,
+      totalPages: Math.max(movieData.total_pages, tvData.total_pages),
+      totalResults: (movieData.total_results || 0) + (tvData.total_results || 0),
+      hasNextPage: page < Math.max(movieData.total_pages, tvData.total_pages),
     };
     // Cache in Redis for 1 hour (stringify for safety)
     await redis.set(cacheKey, JSON.stringify(response), { ex: 3600 });

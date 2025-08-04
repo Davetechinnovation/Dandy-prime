@@ -1,199 +1,29 @@
-import { NextRequest, NextResponse } from 'next/server';
-import redis from '@/lib/redis';
-
-const TMDB_API_KEY = process.env.TMDB_API_KEY;
-const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
-const CACHE_TTL = 60 * 60 * 2; // 2 hours
-
-// --- TypeScript Types ---
-interface Genre { id: number; name: string; }
-interface Keyword { id: number; name: string; }
-interface Video {
-  id: string;
-  key: string;
-  name: string;
-  site: string;
-  type: string;
-}
-interface Cast {
-  cast_id?: number;
-  name: string;
-  profile_path: string | null;
-  character: string;
-}
-interface MovieDetails {
-  id: number;
-  title: string;
-  vote_average: number;
-  poster_path: string | null;
-  backdrop_path: string | null;
-  overview: string;
-  release_date: string;
-  runtime: number;
-  original_language: string;
-  genres: Genre[];
-  adult: boolean;
-  vote_count: number;
-}
-interface VideosResponse { id: number; results: Video[]; }
-interface ReviewsResponse { id: number; page: number; results: unknown[]; total_results: number; total_pages: number; }
-interface CreditsResponse { id: number; cast: Cast[]; crew: unknown[]; }
-interface RecommendationsResponse { page: number; results: MovieDetails[]; total_pages: number; total_results: number; }
-interface SimilarResponse { page: number; results: MovieDetails[]; total_pages: number; total_results: number; }
-interface KeywordsResponse { id: number; keywords: Keyword[]; }
-
-interface FinalResponse {
-  id: number;
-  title: string;
-  rating: number;
-  poster_path: string | null;
-  backdrop_path: string | null;
-  overview: string;
-  release_date: string;
-  runtime: number;
-  language: string;
-  genres: { id: number; name: string }[];
-  keywords: { id: number; name: string }[];
-  trailer: Video | null;
-  reviews_count: number;
-  main_cast: Cast[];
-  recommendations: MovieDetails[];
-  similar: MovieDetails[];
-  adult: boolean;
-  vote_count: number;
-}
-
-// --- Helper for TMDB fetch ---
-async function fetchTMDB<T>(endpoint: string): Promise<T | null> {
-  try {
-    // Always append api_key param for v3 API
-    const url = `${TMDB_BASE_URL}${endpoint}${endpoint.includes('?') ? '&' : '?'}api_key=${TMDB_API_KEY}`;
-    const res = await fetch(url, {
-      next: { revalidate: 60 },
-    });
-    if (!res.ok) throw new Error(`TMDB fetch failed: ${endpoint}`);
-    return await res.json();
-  } catch (err) {
-    console.error(`Error fetching ${endpoint}:`, err);
-    return null;
-  }
-}
+import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
-  const movieId = req.nextUrl.searchParams.get('id');
-  if (!movieId) {
-    return NextResponse.json({ error: 'Missing movie id' }, { status: 400 });
+  const url = req.nextUrl;
+  const id = url.searchParams.get("id");
+  const media_type = url.searchParams.get("media_type");
+  const mediaType = media_type; // forward as camelCase
+  console.log("[details API] id:", id, "media_type:", media_type);
+
+  if (!id || !media_type) {
+    return NextResponse.json(
+      { error: "Missing id or media_type" },
+      { status: 400 }
+    );
   }
 
-  const cacheKey = `movie:details:${movieId}`;
-  // Try Redis cache first
-  const cached = await redis.get(cacheKey);
-  if (typeof cached === 'string' && cached) {
-    try {
-      // Serve cached data immediately
-      const parsed = JSON.parse(cached);
-      // Stale-while-revalidate: trigger background refresh
-      (async () => {
-        const now = Date.now();
-        const cacheAge = parsed._cachedAt ? (now - parsed._cachedAt) / 1000 : CACHE_TTL + 1;
-        if (cacheAge > CACHE_TTL) {
-          // Cache is stale, refresh in background
-          await refreshAndCache(movieId, cacheKey);
-        }
-      })();
-      // Remove _cachedAt before sending to client
-      delete parsed._cachedAt;
-      return NextResponse.json(parsed);
-    } catch {
-      // ignore parse error, continue to fetch
-    }
+  // Proxy to the correct dynamic route
+  const apiUrl = `${url.origin}/api/home/details/${mediaType}/${id}?id=${id}&mediaType=${mediaType}`;
+  try {
+    const res = await fetch(apiUrl, { method: "GET" });
+    const data = await res.json();
+    return NextResponse.json(data, { status: res.status });
+  } catch {
+    return NextResponse.json(
+      { error: "Failed to fetch details" },
+      { status: 500 }
+    );
   }
-
-  // No cache or cache error, fetch and cache
-  const data = await refreshAndCache(movieId, cacheKey);
-  if (data) {
-    return NextResponse.json(data);
-  } else {
-    return NextResponse.json({ error: 'Failed to fetch movie data' }, { status: 500 });
-  }
-}
-
-// --- Helper to fetch all data, handle errors, and cache ---
-async function refreshAndCache(movieId: string, cacheKey: string): Promise<FinalResponse | null> {
-  const endpoints = [
-    `/movie/${movieId}?language=en-US`,
-    `/movie/${movieId}/videos?language=en-US`,
-    `/movie/${movieId}/reviews?language=en-US`,
-    `/movie/${movieId}/credits?language=en-US`,
-    `/movie/${movieId}/recommendations?language=en-US`,
-    `/movie/${movieId}/similar?language=en-US`,
-    `/movie/${movieId}/keywords?language=en-US`,
-  ];
-
-  const results = await Promise.allSettled([
-    fetchTMDB<MovieDetails>(endpoints[0]),
-    fetchTMDB<VideosResponse>(endpoints[1]),
-    fetchTMDB<ReviewsResponse>(endpoints[2]),
-    fetchTMDB<CreditsResponse>(endpoints[3]),
-    fetchTMDB<RecommendationsResponse>(endpoints[4]),
-    fetchTMDB<SimilarResponse>(endpoints[5]),
-    fetchTMDB<KeywordsResponse>(endpoints[6]),
-  ]);
-
-  const detailsRes = results[0].status === 'fulfilled' ? results[0].value as MovieDetails : null;
-  const videosRes = results[1].status === 'fulfilled' ? results[1].value as VideosResponse : null;
-  const reviewsRes = results[2].status === 'fulfilled' ? results[2].value as ReviewsResponse : null;
-  const creditsRes = results[3].status === 'fulfilled' ? results[3].value as CreditsResponse : null;
-  const recommendationsRes = results[4].status === 'fulfilled' ? results[4].value as RecommendationsResponse : null;
-  const similarRes = results[5].status === 'fulfilled' ? results[5].value as SimilarResponse : null;
-  const keywordsRes = results[6].status === 'fulfilled' ? results[6].value as KeywordsResponse : null;
-
-  // If detailsRes is missing, fail (this is the core data)
-  if (!detailsRes) return null;
-  const details: MovieDetails = detailsRes;
-
-  // Extract trailer (first YouTube trailer)
-  const trailer = videosRes?.results?.find(
-    (v: Video) => v.type === 'Trailer' && v.site === 'YouTube'
-  ) || null;
-
-  // Extract main cast (top 8, only with images)
-  const mainCast: Cast[] = creditsRes?.cast
-    ?.filter((c: Cast) => c.profile_path)
-    .slice(0, 8)
-    .map((c: Cast) => ({
-      name: c.name,
-      profile_path: c.profile_path,
-      character: c.character,
-    })) || [];
-
-  // Extract genres, keywords, recommendations, similar
-  const genres = details.genres?.map((g: Genre) => ({ id: g.id, name: g.name })) || [];
-  const keywordsList = keywordsRes?.keywords?.map((k: Keyword) => ({ id: k.id, name: k.name })) || [];
-  const recommendationsList = recommendationsRes?.results?.slice(0, 8) || [];
-  const similarList = similarRes?.results?.slice(0, 8) || [];
-
-  const responseData: FinalResponse = {
-    id: details.id,
-    title: details.title,
-    rating: Number(details.vote_average.toFixed(2)),
-    poster_path: details.poster_path,
-    backdrop_path: details.backdrop_path,
-    overview: details.overview,
-    release_date: details.release_date,
-    runtime: details.runtime,
-    language: details.original_language,
-    genres,
-    keywords: keywordsList,
-    trailer,
-    reviews_count: reviewsRes?.total_results || 0,
-    main_cast: mainCast,
-    recommendations: recommendationsList,
-    similar: similarList,
-    adult: details.adult,
-    vote_count: details.vote_count,
-  };
-  const cacheObj = { ...responseData, _cachedAt: Date.now() };
-  await redis.setex(cacheKey, CACHE_TTL, JSON.stringify(cacheObj));
-  return responseData;
 }

@@ -92,9 +92,11 @@ const Popular = () => {
                 ) {
                   key = `${movie.id}-${movie.media_type || "movie"}-${idx}`;
                 }
+                // Normalize media_type to 'movie' or 'tv' only
+                const normalizedMediaType = movie.media_type === "tv" ? "tv" : "movie";
                 return (
                   <div key={key} ref={isLast ? lastMovieRef : undefined}>
-                    <MovieCard movie={movie} />
+                    <MovieCard movie={{ ...movie, media_type: normalizedMediaType }} />
                   </div>
                 );
               })}

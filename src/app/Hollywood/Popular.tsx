@@ -94,7 +94,12 @@ const Popular = () => {
               }
               return (
                 <div key={key} ref={isLast ? lastMovieRef : undefined}>
-                  <MovieCard movie={movie} />
+                  <MovieCard
+                movie={{
+                  ...movie,
+                  media_type: movie.media_type === "tv" ? "tv" : "movie",
+                }}
+              />
                 </div>
               );
             })

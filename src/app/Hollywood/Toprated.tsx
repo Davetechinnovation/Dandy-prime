@@ -10,6 +10,7 @@ type Movie = {
   image: string | null;
   year: string | null;
   rating: number;
+  media_type?: string;
 };
 
 const Toprated = () => {
@@ -48,7 +49,15 @@ const Toprated = () => {
               No top rated movies found.
             </div>
           ) : (
-            topRated.map((movie) => <MovieCard key={movie.id} movie={movie} />)
+            topRated.map((movie) => (
+              <MovieCard
+                key={movie.id}
+                movie={{
+                  ...movie,
+                  media_type: movie.media_type === "tv" ? "tv" : "movie",
+                }}
+              />
+            ))
           )}
         </div>
       </div>

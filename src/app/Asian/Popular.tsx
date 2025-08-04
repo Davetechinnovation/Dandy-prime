@@ -12,6 +12,7 @@ type Movie = {
   image: string | null;
   year: string | null;
   rating: number;
+  media_type?: string;
 };
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
@@ -64,7 +65,12 @@ const Popular = () => {
           )}
           {movies.map((movie) => (
             <li key={movie.id}>
-              <MovieCard movie={movie} />
+              <MovieCard
+                movie={{
+                  ...movie,
+                  media_type: movie.media_type === "tv" ? "tv" : "movie",
+                }}
+              />
             </li>
           ))}
         </ul>

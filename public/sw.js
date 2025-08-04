@@ -153,7 +153,7 @@ self.addEventListener("periodicsync", (event) => {
   }
 });
 
-const CACHE_NAME = "dandyprime-cache-v2";
+const CACHE_NAME = "dandyprime-cache-v5"; // Increment for EVERY deployment
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -230,25 +230,68 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Cache API responses for offline browsing
+  // Network-first strategy for API responses to prevent stale data
   if (url.pathname.startsWith("/api/")) {
     event.respondWith(
       fetch(event.request)
         .then((response) => {
+          // Only cache if it's a successful response
           if (response && response.status === 200) {
             const responseToCache = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              // Add cache expiry (5 minutes for API responses)
+              const headers = new Headers(responseToCache.headers);
+              headers.set('sw-cache-timestamp', Date.now().toString());
+              const modifiedResponse = new Response(responseToCache.body, {
+                status: responseToCache.status,
+                statusText: responseToCache.statusText,
+                headers: headers
+              });
+              cache.put(event.request, modifiedResponse);
+            });
+          }
+          return response;
+        })
+        .catch(() => {
+          // Check if cached response is still fresh (5 minutes)
+          return caches.match(event.request).then((cachedResponse) => {
+            if (cachedResponse) {
+              const cacheTimestamp = cachedResponse.headers.get('sw-cache-timestamp');
+              if (cacheTimestamp) {
+                const age = Date.now() - parseInt(cacheTimestamp);
+                const maxAge = 5 * 60 * 1000; // 5 minutes
+                if (age < maxAge) {
+                  return cachedResponse;
+                }
+              }
+            }
+            // Return a fallback or null if cache is stale
+            return null;
+          });
+        })
+    );
+    return;
+  }
+
+  // Network-first for JavaScript/CSS files to prevent stale code
+  if (url.pathname.includes('/_next/') || url.pathname.endsWith('.js') || url.pathname.endsWith('.css')) {
+    event.respondWith(
+      fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const responseToCache = networkResponse.clone();
             caches.open(CACHE_NAME).then((cache) => {
               cache.put(event.request, responseToCache);
             });
           }
-          return response;
+          return networkResponse;
         })
         .catch(() => caches.match(event.request))
     );
     return;
   }
 
-  // Static assets and everything else
+  // Cache-first for static assets (images, icons, etc.)
   event.respondWith(
     caches.match(event.request).then((response) => {
       if (response) return response;

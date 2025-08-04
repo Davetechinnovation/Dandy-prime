@@ -12,6 +12,7 @@ interface TMDBSearchResult {
   release_date?: string | null;
   first_air_date?: string | null;
   vote_average: number;
+  media_type?: string; // Added media_type field
 }
 
 interface PosterCard {
@@ -20,9 +21,25 @@ interface PosterCard {
   image: string | null;
   year: string | null;
   rating: number;
+  media_type: string; // Added media_type field
 }
 
-function resultToPosterCard(result: TMDBSearchResult): PosterCard {
+function resultToPosterCard(result: TMDBSearchResult, searchType: string): PosterCard {
+  // Determine media_type: use TMDB's media_type if available, otherwise fallback to search type
+  let mediaType = result.media_type;
+  
+  // If media_type is not provided or is "person", determine from other fields
+  if (!mediaType || mediaType === "person") {
+    if (result.title && result.release_date) {
+      mediaType = "movie";
+    } else if (result.name && result.first_air_date) {
+      mediaType = "tv";
+    } else {
+      // Fallback to search type if still unclear
+      mediaType = searchType === "multi" ? "movie" : searchType;
+    }
+  }
+
   return {
     id: result.id,
     title: result.title || result.name || "",
@@ -32,6 +49,7 @@ function resultToPosterCard(result: TMDBSearchResult): PosterCard {
     year:
       (result.release_date || result.first_air_date || "").slice(0, 4) || null,
     rating: result.vote_average,
+    media_type: mediaType,
   };
 }
 
@@ -83,7 +101,7 @@ export async function GET(request: Request) {
     const results: TMDBSearchResult[] = data.results || [];
     const posterCards: PosterCard[] = results
       .filter((r) => r.poster_path)
-      .map(resultToPosterCard);
+      .map((result) => resultToPosterCard(result, type));
     const response = {
       results: posterCards,
       page: data.page,

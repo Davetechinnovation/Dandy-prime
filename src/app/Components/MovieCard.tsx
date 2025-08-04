@@ -9,18 +9,25 @@ export type Movie = {
   image: string | null;
   year: string | null;
   rating: number;
+  media_type: "movie" | "tv";
 };
 
 interface MovieCardProps {
   movie: Movie;
+  size?: "default" | "small";
+  width?: string;
 }
 
-const MovieCard: React.FC<MovieCardProps> = ({ movie }) => {
+const MovieCard: React.FC<MovieCardProps> = ({
+  movie,
+  size = "default",
+  width,
+}) => {
   const [showOverlay, setShowOverlay] = React.useState(false);
   const cardRef = React.useRef<HTMLDivElement>(null);
 
-  // Hide overlay when clicking outside
-  // Close overlay on outside click or after 20 seconds
+  const isSmall = size === "small";
+
   React.useEffect(() => {
     if (!showOverlay) return;
     function handleClick(e: MouseEvent) {
@@ -29,7 +36,6 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie }) => {
       }
     }
     document.addEventListener("mousedown", handleClick);
-    // Timer to auto-close after 20 seconds
     const timer = setTimeout(() => setShowOverlay(false), 20000);
     return () => {
       document.removeEventListener("mousedown", handleClick);
@@ -40,7 +46,9 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie }) => {
   return (
     <div
       ref={cardRef}
-      className="relative"
+      className={`relative ${
+        width ? width : isSmall ? "min-w-[100px] w-[150px]" : ""
+      }`}
       tabIndex={0}
       onClick={() => {
         if (!showOverlay) setShowOverlay(true);
@@ -49,31 +57,35 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie }) => {
       <ImageWithSkeleton
         src={movie.image || "/images/sinners.webp"}
         alt={movie.title}
-        width={500}
-        height={300}
-        className="w-full h-[120px] sm:h-[300px] rounded-t-lg object-cover cursor-pointer "
+        width={isSmall ? 200 : 500}
+        height={isSmall ? 100 : 300}
+        className="w-full h-[160px] sm:h-[300px] rounded-t-lg object-cover cursor-pointer"
         loading="lazy"
         placeholder="blur"
         blurDataURL="/images/sinners.webp"
       />
-      <div className="border border-t-0 border-blue-700 rounded-b-lg px-2 leading-8 ">
-        <p className="sm:text-[16px] text-[13px] truncate ">{movie.title}</p>
-        <p className="flex items-center justify-between sm:text-[14px] text-[11px] ">
+
+      <div
+        className={`border border-t-0 flex  flex-col gap-2 border-blue-700 rounded-b-lg px-2 leading-6`}
+      >
+        <p className="truncate text-[12px] sm:text-[16px]">{movie.title}</p>
+        <p className="flex items-center justify-between text-[11px] sm:text-[14px]">
           <span>{movie.year}</span>
-          <span className="flex items-center justify-between gap-2 ">
+          <span className="flex items-center gap-1">
             <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
             {movie.rating}
           </span>
         </p>
       </div>
+
       {showOverlay && (
         <div className="w-full h-full bg-blue-700/15 absolute top-0 left-0 cursor-pointer rounded-lg transition-opacity duration-300 z-10">
           <div className="absolute top-2 right-2">
-            <Bookmark className="w-5 h-5 cursor-pointer text-blue-700   " />
+            <Bookmark className="w-5 h-5 cursor-pointer text-blue-700" />
           </div>
-          <div className="absolute bottom-[67px] left-1/2 -translate-x-1/2  ">
-            <Link href={`/detail/${movie.id}`}>
-              <button
+          <div className="absolute bottom-[67px] left-1/2 -translate-x-1/2">
+            <Link href={`/detail/${movie.media_type}/${movie.id}`}>
+               <button
                 onClick={(e) => e.stopPropagation()}
                 className="bg-blue-700 sm:px-7 px-3 py-[1px] rounded-full border-2 border-blue-700 hover:bg-transparent duration-500 transition-all cursor-pointer text-[12px] sm:text-base text-[white] hover:text-blue-700 flex gap-2 items-center "
               >

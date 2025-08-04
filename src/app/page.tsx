@@ -3,6 +3,7 @@ import BannerSkeleton from "./Components/BannerSkeleton";
 import { useContext } from "react";
 import { LayoutContext } from "./Providers";
 import Image from "next/image";
+import Link from "next/link";
 import { Star, Bookmark, PlayCircle } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -187,10 +188,12 @@ export default function Home() {
                         {currentMovie.description}
                       </p>
                       <div className="flex sm:gap-4 gap-2 items-center">
-                        <button className="sm:text-[17px] text-[14px] flex items-center gap-2 bg-blue-700 sm:px-4 px-2 py-[5px] rounded-md cursor-pointer border-2 border-blue-700 hover:text-blue-700 hover:bg-transparent duration-500 transition-all">
-                          <PlayCircle className="w-5 h-5 cursor-pointer" />
-                          Watch Now
-                        </button>
+                        <Link href={`/detail/movie/${currentMovie.id}`}>
+                          <button className="sm:text-[17px] text-[14px] flex items-center gap-2 bg-blue-700 sm:px-4 px-2 py-[5px] rounded-md cursor-pointer border-2 border-blue-700 hover:text-blue-700 hover:bg-transparent duration-500 transition-all">
+                            <PlayCircle className="w-5 h-5 cursor-pointer" />
+                            Watch Now
+                          </button>
+                        </Link>
                         <button className="sm:text-[17px] text-[14px] flex items-center gap-2 bg-blue-700 sm:px-4 px-2 py-[5px] rounded-md cursor-pointer border-2 border-blue-700 hover:text-blue-700 hover:bg-transparent duration-500 transition-all">
                           <Bookmark className="w-5 h-5 cursor-pointer" />
                           Save to watch list
@@ -242,10 +245,12 @@ export default function Home() {
                           {nextMovie.description}
                         </p>
                         <div className="flex sm:gap-4 gap-2 items-center">
-                          <button className="sm:text-[17px] text-[14px] flex items-center gap-2 bg-blue-700 sm:px-4 px-2 py-[5px] rounded-md cursor-pointer border-2 border-blue-700 hover:text-blue-700 hover:bg-transparent duration-500 transition-all">
-                            <PlayCircle className="w-5 h-5 cursor-pointer" />
-                            Watch Now
-                          </button>
+                           <Link href={`/detail/movie/${nextMovie.id}`}>
+                         <button className="sm:text-[17px] text-[14px] flex items-center gap-2 bg-blue-700 sm:px-4 px-2 py-[5px] rounded-md cursor-pointer border-2 border-blue-700 hover:text-blue-700 hover:bg-transparent duration-500 transition-all">
+                           <PlayCircle className="w-5 h-5 cursor-pointer" />
+                              Watch Now
+                             </button>
+                           </Link>
                           <button className="sm:text-[17px] text-[14px] flex items-center gap-2 bg-blue-700 sm:px-4 px-2 py-[5px] rounded-md cursor-pointer border-2 border-blue-700 hover:text-blue-700 hover:bg-transparent duration-500 transition-all">
                             <Bookmark className="w-5 h-5 cursor-pointer" />
                             Save to watch list

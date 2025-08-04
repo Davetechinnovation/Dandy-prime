@@ -29,6 +29,7 @@ export async function GET(req: NextRequest) {
       image: movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : null,
       year: movie.release_date ? movie.release_date.slice(0, 4) : null,
       rating: movie.vote_average,
+      media_type: "movie",
     }));
     return NextResponse.json({
       results,

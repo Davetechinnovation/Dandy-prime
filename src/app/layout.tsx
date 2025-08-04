@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./Providers";
 import LayoutContent from "./LayoutContent";
+// Import fetch interceptor to enable global cache busting
+import "@/lib/fetch-interceptor";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

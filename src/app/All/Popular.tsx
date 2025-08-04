@@ -10,6 +10,7 @@ type Movie = {
   image: string | null;
   year: string | null;
   rating: number;
+  media_type?: string;
 };
 
 type PopularApiResponse = {
@@ -80,6 +81,7 @@ const Popular = () => {
                 image: movie.image,
                 year: movie.year,
                 rating: Number(movie.rating),
+                media_type: movie.media_type === "tv" ? "tv" : "movie",
               }}
             />
           ))}

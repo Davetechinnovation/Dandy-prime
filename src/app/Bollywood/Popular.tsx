@@ -11,6 +11,7 @@ type Movie = {
   image: string | null;
   year: string | null;
   rating: number;
+  media_type?: string;
 };
 
 const Popular = () => {
@@ -75,7 +76,15 @@ const Popular = () => {
               No popular movies found.
             </div>
           ) : (
-            popular.map((movie) => <MovieCard key={movie.id} movie={movie} />)
+            popular.map((movie) => (
+              <MovieCard
+                key={movie.id}
+                movie={{
+                  ...movie,
+                  media_type: movie.media_type === "tv" ? "tv" : "movie",
+                }}
+              />
+            ))
           )}
         </div>
         <div ref={loaderRef} />
