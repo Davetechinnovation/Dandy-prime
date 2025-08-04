@@ -6,8 +6,11 @@ import Skeleton from "./skeleton";
 const ImageWithSkeleton = (props: ImageProps) => {
   const [loading, setLoading] = useState(true);
 
+  // Check if the fill prop is present
+  const isFill = props.fill;
+
   return (
-    <div className="relative ">
+    <div className={`relative ${props.className || ""}${isFill ? ' h-full' : ''}`} style={isFill ? { height: '100%' } : {}}>
       {loading && <Skeleton className="absolute inset-0" />}
       <Image
         {...props}

@@ -9,6 +9,7 @@ import {
   AlertTriangleIcon,
   ArrowLeft,
   Bookmark,
+  ChevronDown,
   Download,
   Play,
   PlayCircle,
@@ -135,7 +136,10 @@ export default function DetailPage() {
   return (
     <main className="text-white sm:py-[71px] py-[85px]  ">
       <section className="grid items-center md:grid-cols-[760px_1fr] small:grid-cols-1 medium:grid-cols-[610px_1fr] grid-cols-1  gap-2">
-        <div className="relative w-full sm:h-[355px] h-[205px] ">
+        <div
+          className="relative w-full sm:h-[355px] h-[205px] "
+          style={{ height: "355px" }}
+        >
           {data.backdrop_path ? (
             <ImageWithSkeleton
               src={imageBase + data.backdrop_path}
@@ -152,7 +156,10 @@ export default function DetailPage() {
           <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 cursor-not-allowed opacity-50 select-none">
             <PlayCircleIcon className="w-10 h-10 fill-blue-700" />
           </div>
-          <div className="max-w-[150px]  small:hidden h-[220px] absolute w-full -bottom-[70px] left-10 ">
+          <div
+            className="max-w-[150px]  small:hidden h-[220px] absolute w-full -bottom-[70px] left-10 "
+            style={{ height: "220px" }}
+          >
             {data.poster_path ? (
               <ImageWithSkeleton
                 src={imageBase + data.poster_path}
@@ -283,6 +290,15 @@ export default function DetailPage() {
               <option value="7">Episode 7</option>
             </select>
           </div>
+
+          <div className="border border-blue-700 rounded-full py-2 mt-2 px-2 cursor-pointer ">
+            <div className="flex  gap-3 w-full justify-between  ">
+              <h2>Episode information</h2>
+              <p>
+                <ChevronDown />
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -374,7 +390,7 @@ export default function DetailPage() {
         <h2 className="text-[25px] font-semibold  my-3 border-b-2 border-b-blue-700 max-w-[50px] w-full ">
           Plot
         </h2>
-        <p className="text-[13px] sm:text-[16px] ">{data.overview}</p>
+        <p className="text-[14px] sm:text-[16px] ">{data.overview}</p>
         {data.main_cast && data.main_cast.length > 0 && (
           <>
             <h2 className="text-[25px] font-semibold  my-3 border-b-2 border-b-blue-700 max-w-[50px] w-full ">
@@ -439,7 +455,10 @@ export default function DetailPage() {
               const movie = rec as MovieDetails;
               return (
                 <div key={String(movie.id)} className="min-w-[100px] w-[150px]">
-                  <div className="relative w-full h-[200px] rounded-lg overflow-hidden">
+                  <div
+                    className="relative w-full h-[200px] rounded-lg overflow-hidden"
+                    style={{ height: "200px" }}
+                  >
                     {movie.poster_path ? (
                       <ImageWithSkeleton
                         src={imageBase + movie.poster_path}
@@ -475,7 +494,10 @@ export default function DetailPage() {
               const movie = sim as MovieDetails;
               return (
                 <div key={String(movie.id)} className="min-w-[100px] w-[150px]">
-                  <div className="relative w-full h-[200px] rounded-lg overflow-hidden">
+                  <div
+                    className="relative w-full h-[200px] rounded-lg overflow-hidden"
+                    style={{ height: "200px" }}
+                  >
                     {movie.poster_path ? (
                       <ImageWithSkeleton
                         src={imageBase + movie.poster_path}

@@ -147,32 +147,26 @@ export async function GET(req: NextRequest) {
       // Remove _cachedAt before sending to client
       delete parsed._cachedAt;
       return NextResponse.json(parsed);
-    } catch {
+    } catch (e) {
       // ignore parse error, continue to fetch
+      console.error("Redis cache parse error:", e);
     }
   }
 
-  // No cache or cache error, fetch and cache
-  const data = await refreshAndCache(movieId, mediaType, cacheKey);
+  // Fetch primary details first
+  const detailsEndpoint = `/${mediaType}/${movieId}?language=en-US`;
+  const detailsRes = await fetchTMDB<MovieDetails>(detailsEndpoint);
 
-  if (data) {
-    return NextResponse.json(data);
-  } else {
+  if (!detailsRes) {
+    // If primary details fetch fails, return a specific error
     return NextResponse.json(
-      { error: "Failed to fetch movie data" },
+      { error: `Failed to fetch primary details for ${mediaType}/${movieId}` },
       { status: 500 }
     );
   }
-}
 
-// --- Helper to fetch all data, handle errors, and cache ---
-async function refreshAndCache(
-  movieId: string,
-  mediaType: string,
-  cacheKey: string
-): Promise<FinalResponse | null> {
-  const endpoints = [
-    `/${mediaType}/${movieId}?language=en-US`,
+  // Fetch other data concurrently
+  const otherEndpoints = [
     `/${mediaType}/${movieId}/videos?language=en-US`,
     `/${mediaType}/${movieId}/reviews?language=en-US`,
     `/${mediaType}/${movieId}/credits?language=en-US`,
@@ -182,46 +176,39 @@ async function refreshAndCache(
   ];
 
   const results = await Promise.allSettled([
-    fetchTMDB<MovieDetails>(endpoints[0]),
-    fetchTMDB<VideosResponse>(endpoints[1]),
-    fetchTMDB<ReviewsResponse>(endpoints[2]),
-    fetchTMDB<CreditsResponse>(endpoints[3]),
-    fetchTMDB<RecommendationsResponse>(endpoints[4]),
-    fetchTMDB<SimilarResponse>(endpoints[5]),
-    fetchTMDB<KeywordsResponse>(endpoints[6]),
+    fetchTMDB<VideosResponse>(otherEndpoints[0]),
+    fetchTMDB<ReviewsResponse>(otherEndpoints[1]),
+    fetchTMDB<CreditsResponse>(otherEndpoints[2]),
+    fetchTMDB<RecommendationsResponse>(otherEndpoints[3]),
+    fetchTMDB<SimilarResponse>(otherEndpoints[4]),
+    fetchTMDB<KeywordsResponse>(otherEndpoints[5]),
   ]);
 
-  const detailsRes =
-    results[0].status === "fulfilled"
-      ? (results[0].value as MovieDetails)
-      : null;
   const videosRes =
-    results[1].status === "fulfilled"
-      ? (results[1].value as VideosResponse)
+    results[0].status === "fulfilled"
+      ? (results[0].value as VideosResponse)
       : null;
   const reviewsRes =
-    results[2].status === "fulfilled"
-      ? (results[2].value as ReviewsResponse)
+    results[1].status === "fulfilled"
+      ? (results[1].value as ReviewsResponse)
       : null;
   const creditsRes =
-    results[3].status === "fulfilled"
-      ? (results[3].value as CreditsResponse)
+    results[2].status === "fulfilled"
+      ? (results[2].value as CreditsResponse)
       : null;
   const recommendationsRes =
-    results[4].status === "fulfilled"
-      ? (results[4].value as RecommendationsResponse)
+    results[3].status === "fulfilled"
+      ? (results[3].value as RecommendationsResponse)
       : null;
   const similarRes =
-    results[5].status === "fulfilled"
-      ? (results[5].value as SimilarResponse)
+    results[4].status === "fulfilled"
+      ? (results[4].value as SimilarResponse)
       : null;
   const keywordsRes =
-    results[6].status === "fulfilled"
-      ? (results[6].value as KeywordsResponse)
+    results[5].status === "fulfilled"
+      ? (results[5].value as KeywordsResponse)
       : null;
 
-  // If detailsRes is missing, fail (this is the core data)
-  if (!detailsRes) return null;
   const details: MovieDetails = detailsRes;
 
   // Extract trailer (first YouTube trailer)
@@ -271,5 +258,20 @@ async function refreshAndCache(
   };
   const cacheObj = { ...responseData, _cachedAt: Date.now() };
   await redis.setex(cacheKey, CACHE_TTL, JSON.stringify(cacheObj));
-  return responseData;
+  return NextResponse.json(responseData);
+}
+
+// --- Helper to fetch all data, handle errors, and cache ---
+// This function is no longer directly called by GET, but kept for potential future use or clarity.
+// If it were to be used, its return type would need to be adjusted to handle NextResponse.
+async function refreshAndCache(
+  movieId: string,
+  mediaType: string,
+  cacheKey: string
+): Promise<FinalResponse | null> {
+  // This function's logic is now integrated into the GET function.
+  // If it were to be called, it would need to be refactored to return a more specific error or data structure.
+  // For now, we can consider it deprecated in this context.
+  console.warn("refreshAndCache called directly, which is not the intended flow after refactor.");
+  return null; // Placeholder return
 }
