@@ -54,7 +54,7 @@ const Toprated = () => {
                 key={movie.id}
                 movie={{
                   ...movie,
-                  media_type: movie.media_type === "tv" ? "tv" : "movie",
+                media_type: movie.media_type === "tv" ? "tv" : "movie",
                 }}
               />
             ))
