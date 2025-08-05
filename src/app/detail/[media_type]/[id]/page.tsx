@@ -49,6 +49,7 @@ interface MovieDetails {
   genres: GenreOrKeyword[];
   keywords: GenreOrKeyword[];
   trailer: Video | null;
+  teaser: Video | null;
   reviews_count: number;
   main_cast: Cast[];
   recommendations: unknown[];
@@ -59,6 +60,7 @@ interface MovieDetails {
 
 import { useParams } from "next/navigation";
 import Loader2 from "../../../Components/Loader2";
+import Image from "next/image";
 
 export default function DetailPage() {
   const router = useRouter();
@@ -67,6 +69,53 @@ export default function DetailPage() {
   const [data, setData] = useState<MovieDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showVideo, setShowVideo] = useState(false);
+  const [videoKey, setVideoKey] = useState<string | null>(null);
+  const [videoLoading, setVideoLoading] = useState(false);
+  const [showStream, setShowStream] = useState(false);
+  const [streamHtml, setStreamHtml] = useState<string | null>(null);
+  const [streamLoading, setStreamLoading] = useState(false);
+  const [currentServer, setCurrentServer] = useState('1'); // Default to server 1
+
+  const serverMap: { [key: string]: string } = {
+    vidsrc: '1',
+    goojara: '2',
+    flixhq: '3',
+    dramacool: '4',
+    asiaflix: '5',
+    zoro: '6',
+  };
+
+  const handlePlayVideo = (key: string | null) => {
+    if (key) {
+      setVideoKey(key);
+      setVideoLoading(true);
+      setShowVideo(true);
+      setShowStream(false); // Ensure stream is hidden when trailer plays
+    }
+  };
+
+  const handlePlayStream = async () => {
+    setStreamLoading(true);
+    setShowStream(true);
+    setShowVideo(false); // Ensure trailer is hidden when stream plays
+    try {
+      const res = await fetch(`/api/stream/${id}?media_type=${media_type}`);
+      if (!res.ok) {
+        throw new Error('Failed to fetch stream');
+      }
+      const data = await res.json();
+      setStreamHtml(data.html);
+      if (data.sourceName && serverMap[data.sourceName]) {
+        setCurrentServer(serverMap[data.sourceName]);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load stream');
+      setShowStream(false);
+    } finally {
+      setStreamLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (!id || !media_type) return;
@@ -115,7 +164,7 @@ export default function DetailPage() {
   };
 
   if (loading) {
-    return <Loader2 height={60} />;
+    return <Loader2 height={50} />;
   }
   if (error || !data) {
     return (
@@ -134,30 +183,79 @@ export default function DetailPage() {
 
   const imageBase = "https://image.tmdb.org/t/p/original";
   return (
-    <main className="text-white sm:py-[71px] py-[85px]  ">
-      <section className="grid items-center md:grid-cols-[760px_1fr] small:grid-cols-1 medium:grid-cols-[610px_1fr] grid-cols-1  gap-2">
-        <div
-          className="relative w-full sm:h-[355px] h-[205px] "
-          style={{ height: "355px" }}
-        >
-          {data.backdrop_path ? (
-            <ImageWithSkeleton
-              src={imageBase + data.backdrop_path}
-              alt={data.title}
-              fill
-              unoptimized
-              priority
-              className="object-cover rounded-lg"
-            />
+    <main className="text-white sm:py-[71px] py-[85px] bg-[#0a0a0a] ">
+      <section className="grid items-start md:grid-cols-[760px_1fr] small:grid-cols-1 medium:grid-cols-[610px_1fr] grid-cols-1  gap-2">
+        <div className="relative w-full sm:h-[355px] h-[205px] ">
+          {showStream ? (
+            <>
+              {streamLoading && (
+                <div className="absolute inset-0 flex justify-center items-center bg-black bg-opacity-50 z-10">
+                  <Loader2 height={40} />
+                </div>
+              )}
+              {streamHtml && (
+                <iframe
+                  srcDoc={streamHtml}
+                  title="Stream Player"
+                  frameBorder="0"
+                  allowFullScreen
+                  className="w-full h-full"
+                ></iframe>
+              )}
+              <button onClick={() => setShowStream(false)} className="absolute top-2 right-2 z-20 bg-black bg-opacity-50 rounded-full p-1 text-white">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </>
+          ) : showVideo && videoKey ? (
+            <>
+              {videoLoading && (
+                <div className="absolute inset-0 flex justify-center items-center bg-black bg-opacity-50 z-10">
+                  <Loader2 height={40} />
+                </div>
+              )}
+              <iframe
+                src={`https://www.youtube.com/embed/${videoKey}?autoplay=1&rel=0`}
+                title="YouTube video player"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="w-full h-full"
+                onLoad={() => setVideoLoading(false)}
+              ></iframe>
+               <button onClick={() => setShowVideo(false)} className="absolute top-6 right-2 z-20 bg-black bg-opacity-50 rounded-full p-1 text-white">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </>
           ) : (
-            <div className="w-full h-full bg-gray-800 rounded-lg" />
+            <>
+              {data.backdrop_path ? (
+                <ImageWithSkeleton
+                  src={imageBase + data.backdrop_path}
+                  alt={data.title}
+                  fill
+                  unoptimized
+                  priority
+                  className="object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-gray-800 rounded-lg" />
+              )}
+              <div
+                onClick={handlePlayStream}
+                className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 cursor-pointer select-none"
+              >
+                <PlayCircleIcon className="w-10 h-10 fill-blue-700" />
+              </div>
+            </>
           )}
-          {/* Trailer button UI present but disabled */}
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 cursor-not-allowed opacity-50 select-none">
-            <PlayCircleIcon className="w-10 h-10 fill-blue-700" />
-          </div>
           <div
-            className="max-w-[150px]  small:hidden h-[220px] absolute w-full -bottom-[70px] left-10 "
+            className={`max-w-[150px] small:hidden h-[220px] absolute w-full -bottom-[70px] left-10 ${
+              showVideo || showStream ? "hidden" : ""
+            }`}
             style={{ height: "220px" }}
           >
             {data.poster_path ? (
@@ -200,12 +298,18 @@ export default function DetailPage() {
             aria-label="Movie actions"
           >
             <ul className="flex items-center justify-between px-3 py-2 gap-2">
-              {/* Trailer nav item UI present but disabled */}
-              <li className="flex flex-col items-center text-[13px] sm:text-[15px] cursor-not-allowed opacity-50 select-none">
+              <li
+                onClick={() => handlePlayVideo(data.teaser?.key ?? null)}
+                className={`flex flex-col items-center text-[13px] sm:text-[15px] ${
+                  data.teaser?.key
+                    ? "cursor-pointer"
+                    : "cursor-not-allowed opacity-50 select-none"
+                }`}
+              >
                 <span>
                   <Play className="text-blue-700 w-5 h-5 " />
                 </span>
-                <span>Trailer</span>
+                <span>Teaser</span>
               </li>
               <li className="flex flex-col items-center text-[13px] sm:text-[15px] cursor-pointer">
                 <span>
@@ -234,11 +338,14 @@ export default function DetailPage() {
               </li>
             </ul>
           </nav>
-          <div className="grid grid-cols-2 pt-6 gap-3">
-            {/* Watch Trailer button UI present but disabled */}
+          <div className="grid grid-cols-2 pt-3 gap-3">
             <button
-              className="bg-blue-700 rounded-full sm:py-3 py-2 flex items-center gap-2 justify-center border-2 border-blue-700 duration-500 transition-all text-white opacity-50 cursor-not-allowed select-none"
-              disabled
+              onClick={() => handlePlayVideo(data.trailer?.key ?? null)}
+              className={`bg-blue-700 rounded-full sm:py-3 py-2 flex items-center gap-2 justify-center border-2 border-blue-700 duration-500 transition-all text-white ${
+                !data.trailer?.key &&
+                "opacity-50 cursor-not-allowed select-none"
+              }`}
+              disabled={!data.trailer?.key}
               type="button"
             >
               <span>
@@ -257,23 +364,23 @@ export default function DetailPage() {
               <option value="4">Server 4</option>
               <option value="5">Server 5</option>
               <option value="6">Server 6</option>
-              <option value="7">Server 7</option>
             </select>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 pt-[20px] ">
+          <div className="grid grid-cols-2 gap-3 py-[10px] ">
             <select
-              name="season"
-              id="season"
-              className=" cursor-pointer bg-black border-2 py-3 border-blue-700 rounded-full px-2  focus:outline-none focus:ring-0"
+              name="server"
+              id="server"
+              value={currentServer}
+              onChange={(e) => setCurrentServer(e.target.value)}
+              className=" cursor-pointer bg-black border-2 border-blue-700 rounded-full px-2  focus:outline-none focus:ring-0"
             >
-              <option value="1">Season 1</option>
-              <option value="2">Season 2</option>
-              <option value="3">Season 3</option>
-              <option value="4">Season 4</option>
-              <option value="5">Season 5</option>
-              <option value="6">Season 6</option>
-              <option value="7">Season 7</option>
+              <option value="1">Vidsrc</option>
+              <option value="2">Goojara</option>
+              <option value="3">FlixHQ</option>
+              <option value="4">Dramacool</option>
+              <option value="5">Asiaflix</option>
+              <option value="6">Zoro</option>
             </select>
 
             <select
@@ -290,13 +397,27 @@ export default function DetailPage() {
               <option value="7">Episode 7</option>
             </select>
           </div>
+          <div className="relative">
+            <div className="border-2 w-full border-blue-700 rounded-full py-3 px-2 cursor-pointer ">
+              <div className="flex  gap-3 w-full justify-between  ">
+                <h2>Episode information</h2>
+                <p>
+                  <ChevronDown className="w-2 h-2" />
+                </p>
+              </div>
+            </div>
 
-          <div className="border border-blue-700 rounded-full py-2 mt-2 px-2 cursor-pointer ">
-            <div className="flex  gap-3 w-full justify-between  ">
-              <h2>Episode information</h2>
-              <p>
-                <ChevronDown />
-              </p>
+            <div className="border border-blue-700 w-full absolute top-14 left-0 ">
+              <div className="flex justify-center items-center w-full max-h-[200px] overflow-hidden">
+                <Image
+                  src="/images/28years.jpg"
+                  alt="28years"
+                  className="w-full h-auto object-cover"
+                  width={0}
+                  height={0}
+                  unoptimized
+                />
+              </div>
             </div>
           </div>
         </div>

@@ -13,6 +13,7 @@ module.exports = {
       screens:{
         medium: { min: "768px", max: "1142px" },
         small: { max: "990px" },
+        smalli: { min: "990px" },
       }
     },
   },

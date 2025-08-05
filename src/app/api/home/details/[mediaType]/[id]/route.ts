@@ -134,7 +134,16 @@ export async function GET(req: NextRequest) {
       // Serve cached data immediately
       const parsed = JSON.parse(cached);
       // Stale-while-revalidate: trigger background refresh
-      // (Background refresh logic removed for robustness)
+      (async () => {
+        const now = Date.now();
+        const cacheAge = parsed._cachedAt
+          ? (now - parsed._cachedAt) / 1000
+          : CACHE_TTL + 1;
+        if (cacheAge > CACHE_TTL) {
+          // Cache is stale, refresh in background
+          await refreshAndCache();
+        }
+      })();
       // Remove _cachedAt before sending to client
       delete parsed._cachedAt;
       return NextResponse.json(parsed);
@@ -210,13 +219,11 @@ export async function GET(req: NextRequest) {
 
   // Extract main cast (top 8)
   const mainCast: Cast[] =
-    creditsRes?.cast
-      ?.slice(0, 8)
-      .map((c: Cast) => ({
-        name: c.name,
-        profile_path: c.profile_path,
-        character: c.character,
-      })) || [];
+    creditsRes?.cast?.slice(0, 8).map((c: Cast) => ({
+      name: c.name,
+      profile_path: c.profile_path,
+      character: c.character,
+    })) || [];
 
   // Extract genres, keywords, recommendations, similar
   const genres =
@@ -252,3 +259,15 @@ export async function GET(req: NextRequest) {
   return NextResponse.json(responseData);
 }
 
+// --- Helper to fetch all data, handle errors, and cache ---
+// This function is no longer directly called by GET, but kept for potential future use or clarity.
+// If it were to be used, its return type would need to be adjusted to handle NextResponse.
+async function refreshAndCache(): Promise<FinalResponse | null> {
+  // This function's logic is now integrated into the GET function.
+  // If it were to be called, it would need to be refactored to return a more specific error or data structure.
+  // For now, we can consider it deprecated in this context.
+  console.warn(
+    "refreshAndCache called directly, which is not the intended flow after refactor."
+  );
+  return null; // Placeholder return
+}
