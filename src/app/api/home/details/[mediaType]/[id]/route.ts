@@ -113,12 +113,13 @@ async function fetchTMDB<T>(endpoint: string): Promise<T | null> {
   }
 }
 
-export async function GET(req: NextRequest) {
-  const movieId = req.nextUrl.searchParams.get("id");
-  // Accept both mediaType and media_type for compatibility
-  const mediaType =
-    req.nextUrl.searchParams.get("mediaType") ||
-    req.nextUrl.searchParams.get("media_type");
+export async function GET(
+  req: NextRequest,
+  { params }: { params: { mediaType: string; id: string } }
+) {
+  const movieId = params.id;
+  const mediaType = params.mediaType;
+
   if (!movieId || !mediaType) {
     return NextResponse.json(
       { error: "Missing movie id or mediaType" },
