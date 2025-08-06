@@ -13,8 +13,8 @@ type Movie = {
   title: string;
   image: string | null;
   year: string | null;
-  rating?: string | number | null;
-  media_type?: string;
+  rating: number;
+  media_type: "movie" | "tv";
   video?: boolean;
 };
 const Asian: React.FC = () => {
@@ -52,11 +52,7 @@ const NewReleasesSection = () => {
             key={movie.id}
             movie={{
               ...movie,
-              rating:
-                typeof movie.rating === "number"
-                  ? movie.rating
-                  : Number(movie.rating || 0),
-              media_type: movie.media_type === "tv" ? "tv" : "movie",
+              rating: Number(movie.rating || 0),
             }}
           />
         ))

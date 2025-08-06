@@ -121,7 +121,7 @@ export default function DetailPage() {
     if (!id || !media_type) return;
     setLoading(true);
     setError(null);
-    fetch(`/api/home/details?id=${id}&media_type=${media_type}`)
+    fetch(`/api/home/details/${media_type}/${id}`)
       .then(async (res) => {
         if (!res.ok) throw new Error("Failed to fetch movie details");
         return res.json();
@@ -373,7 +373,7 @@ export default function DetailPage() {
               id="server"
               value={currentServer}
               onChange={(e) => setCurrentServer(e.target.value)}
-              className=" cursor-pointer bg-black border-2 border-blue-700 rounded-full px-2  focus:outline-none focus:ring-0"
+              className=" cursor-pointer bg-black border-2 border-blue-700 rounded-full px-2 py-2 focus:outline-none focus:ring-0"
             >
               <option value="1">Vidsrc</option>
               <option value="2">Goojara</option>
@@ -386,7 +386,7 @@ export default function DetailPage() {
             <select
               name="Episode"
               id="episode"
-              className=" cursor-pointer bg-black border-2 border-blue-700 rounded-full px-2  focus:outline-none focus:ring-0"
+              className=" cursor-pointer bg-black border-2 border-blue-700 rounded-full px-2 py-2 focus:outline-none focus:ring-0"
             >
               <option value="1">Episode 1</option>
               <option value="2">Episode 2</option>

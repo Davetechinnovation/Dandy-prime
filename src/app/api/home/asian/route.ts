@@ -44,7 +44,7 @@ function mapContent(item: ContentItem) {
       typeof item.vote_average === "number"
         ? item.vote_average.toFixed(1)
         : null,
-    mediaType: item.media_type || (item.title ? "movie" : "tv"),
+    media_type: item.media_type,
     video: item.video,
   };
 }

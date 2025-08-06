@@ -48,7 +48,8 @@ interface Cast {
 }
 interface MovieDetails {
   id: number;
-  title: string;
+  title?: string;
+  name?: string;
   vote_average: number;
   poster_path: string | null;
   backdrop_path: string | null;
@@ -96,6 +97,7 @@ interface KeywordsResponse {
 interface FinalResponse {
   id: number;
   title: string;
+  name?: string;
   rating: number;
   poster_path: string | null;
   backdrop_path: string | null;
@@ -259,7 +261,7 @@ async function fetchTMDB<T>(endpoint: string): Promise<T | null> {
 
   const responseData: FinalResponse = {
     id: details.id,
-    title: details.title,
+    title: details.title || details.name || "",
     rating: Number(details.vote_average.toFixed(2)),
     poster_path: details.poster_path,
     backdrop_path: details.backdrop_path,
