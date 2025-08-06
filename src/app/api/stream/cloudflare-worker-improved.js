@@ -35,7 +35,7 @@ const cloudflareWorker = {
 
     const SOURCE_CONFIG = {
       vidsrc: {
-        domain: "https://vidsrc.pro",
+        domain: "https://vidsrc.to",
         urlPattern: (mediaType, id) => `embed/${mediaType}/${id}`,
         supportsMediaTypes: ["movie", "tv", "anime", "kdrama"],
       },

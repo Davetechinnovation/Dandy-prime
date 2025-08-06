@@ -397,7 +397,7 @@ export default function DetailPage() {
               <option value="7">Episode 7</option>
             </select>
           </div>
-          <div className="relative">
+          <div className="smalli:relative">
             <div className="border-2 w-full border-blue-700 rounded-full py-3 px-2 cursor-pointer ">
               <div className="flex  gap-3 w-full justify-between  ">
                 <h2>Episode information</h2>
@@ -407,7 +407,7 @@ export default function DetailPage() {
               </div>
             </div>
 
-            <div className="border border-blue-700 w-full absolute top-14 left-0 ">
+            <div className="border border-blue-700 w-full smalli:absolute top-14 left-0 ">
               <div className="flex justify-center items-center w-full max-h-[200px] overflow-hidden">
                 <Image
                   src="/images/28years.jpg"
@@ -463,7 +463,7 @@ export default function DetailPage() {
           <div className="border-b border-b-blue-700 py-2">
             <div className="flex items-center justify-between max-w-[300px]   ">
               <dt className="text-[14px] sm:text-[16px] ">Released Date</dt>
-              <dd className="text-[144px] sm:text-[16px] ">
+              <dd className="text-[14px] sm:text-[16px] ">
                 {data.release_date}
               </dd>
             </div>
