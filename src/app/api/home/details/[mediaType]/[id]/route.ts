@@ -54,7 +54,8 @@ interface MovieDetails {
   poster_path: string | null;
   backdrop_path: string | null;
   overview: string;
-  release_date: string;
+  release_date?: string;
+  first_air_date?: string;
   runtime: number;
   original_language: string;
   genres: Genre[];
@@ -266,7 +267,7 @@ async function fetchTMDB<T>(endpoint: string): Promise<T | null> {
     poster_path: details.poster_path,
     backdrop_path: details.backdrop_path,
     overview: details.overview,
-    release_date: details.release_date,
+    release_date: details.release_date || details.first_air_date || "",
     runtime: details.runtime,
     language: details.original_language,
     genres,
