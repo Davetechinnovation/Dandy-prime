@@ -56,7 +56,8 @@ interface MovieDetails {
   overview: string;
   release_date?: string;
   first_air_date?: string;
-  runtime: number;
+  runtime?: number;
+  episode_run_time?: number[];
   original_language: string;
   genres: Genre[];
   adult: boolean;
@@ -268,7 +269,7 @@ async function fetchTMDB<T>(endpoint: string): Promise<T | null> {
     backdrop_path: details.backdrop_path,
     overview: details.overview,
     release_date: details.release_date || details.first_air_date || "",
-    runtime: details.runtime,
+    runtime: details.runtime || (details.episode_run_time && details.episode_run_time[0]) || 0,
     language: details.original_language,
     genres,
     keywords: keywordsList,
