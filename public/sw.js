@@ -46,7 +46,7 @@ function getAllWatchlistItems() {
     };
     request.onsuccess = function (event) {
       const db = event.target.result;
-      const tx = db.transaction(WATCHLIST_STORE, "readonly");
+      const tx = db.transaction(WATCHLIST_STORE, "readonly"); 
       const store = tx.objectStore(WATCHLIST_STORE);
       const getAllRequest = store.getAll();
       getAllRequest.onsuccess = function () {

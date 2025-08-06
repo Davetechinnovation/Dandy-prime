@@ -1,9 +1,28 @@
+// --- Helper to fetch all data, handle errors, and cache ---
+async function refreshAndCache(): Promise<void> {
+  try {
+    // Placeholder for background cache refresh logic
+    // You can implement this if you want to refresh cache in the background
+    console.warn(
+      "refreshAndCache called directly, which is not the intended flow after refactor."
+    );
+  } catch (error) {
+    console.error("Error in refreshAndCache:", error);
+  }
+}
+// Helper for Promise.allSettled type guard
+function isPromiseFulfilled<T>(
+  result: PromiseSettledResult<T | null>
+): result is PromiseFulfilledResult<T | null> {
+  return result.status === "fulfilled";
+}
 import { NextRequest, NextResponse } from "next/server";
 import redis from "@/lib/redis";
 
 const TMDB_API_KEY = process.env.TMDB_API_KEY;
 const TMDB_BASE_URL = "https://api.themoviedb.org/3";
 const CACHE_TTL = 60 * 60 * 2; // 2 hours
+
 
 // --- TypeScript Types ---
 interface Genre {
@@ -113,12 +132,12 @@ async function fetchTMDB<T>(endpoint: string): Promise<T | null> {
   }
 }
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { mediaType: string; id: string } }
+
+  export async function GET(
+  request: NextRequest,
+  context: { params: Promise<{ mediaType: string; id: string }> }
 ) {
-  const movieId = params.id;
-  const mediaType = params.mediaType;
+  const { id: movieId, mediaType } = await context.params;
 
   if (!movieId || !mediaType) {
     return NextResponse.json(
@@ -130,24 +149,24 @@ export async function GET(
   const cacheKey = `${mediaType}:details:${movieId}`;
   // Try Redis cache first
   const cached = await redis.get(cacheKey);
-  if (typeof cached === "string" && cached) {
+  if (cached && typeof cached === "string") {
     try {
-      // Serve cached data immediately
-      const parsed = JSON.parse(cached);
+      const parsed = JSON.parse(cached as string) as FinalResponse & {
+        _cachedAt?: number;
+      };
       // Stale-while-revalidate: trigger background refresh
-      (async () => {
-        const now = Date.now();
-        const cacheAge = parsed._cachedAt
-          ? (now - parsed._cachedAt) / 1000
-          : CACHE_TTL + 1;
-        if (cacheAge > CACHE_TTL) {
-          // Cache is stale, refresh in background
-          await refreshAndCache();
-        }
-      })();
+      const now = Date.now();
+      const cacheAge = parsed._cachedAt
+        ? (now - parsed._cachedAt) / 1000
+        : CACHE_TTL + 1;
+      if (cacheAge > CACHE_TTL) {
+        // Cache is stale, refresh in background
+        void refreshAndCache();
+      }
       // Remove _cachedAt before sending to client
-      delete parsed._cachedAt;
-      return NextResponse.json(parsed);
+      const responseData = { ...parsed };
+      delete responseData._cachedAt;
+      return NextResponse.json(responseData);
     } catch (e) {
       // ignore parse error, continue to fetch
       console.error("Redis cache parse error:", e);
@@ -185,32 +204,35 @@ export async function GET(
     fetchTMDB<KeywordsResponse>(otherEndpoints[5]),
   ]);
 
-  const videosRes =
-    results[0].status === "fulfilled"
-      ? (results[0].value as VideosResponse)
-      : null;
-  const reviewsRes =
-    results[1].status === "fulfilled"
-      ? (results[1].value as ReviewsResponse)
-      : null;
-  const creditsRes =
-    results[2].status === "fulfilled"
-      ? (results[2].value as CreditsResponse)
-      : null;
-  const recommendationsRes =
-    results[3].status === "fulfilled"
-      ? (results[3].value as RecommendationsResponse)
-      : null;
-  const similarRes =
-    results[4].status === "fulfilled"
-      ? (results[4].value as SimilarResponse)
-      : null;
-  const keywordsRes =
-    results[5].status === "fulfilled"
-      ? (results[5].value as KeywordsResponse)
-      : null;
+  const videosRes = isPromiseFulfilled<VideosResponse>(results[0])
+    ? results[0].value
+    : null;
+  const reviewsRes = isPromiseFulfilled<ReviewsResponse>(results[1])
+    ? results[1].value
+    : null;
+  const creditsRes = isPromiseFulfilled<CreditsResponse>(results[2])
+    ? results[2].value
+    : null;
+  const recommendationsRes = isPromiseFulfilled<RecommendationsResponse>(
+    results[3]
+  )
+    ? results[3].value
+    : null;
+  const similarRes = isPromiseFulfilled<SimilarResponse>(results[4])
+    ? results[4].value
+    : null;
+  const keywordsRes = isPromiseFulfilled<KeywordsResponse>(results[5])
+    ? results[5].value
+    : null;
 
-  const details: MovieDetails = detailsRes;
+  // Make sure details is defined
+  const details = detailsRes;
+  if (!details) {
+    return NextResponse.json(
+      { error: "Failed to fetch details" },
+      { status: 500 }
+    );
+  }
 
   // Extract trailer (first YouTube trailer)
   const trailer =
@@ -258,17 +280,4 @@ export async function GET(
   const cacheObj = { ...responseData, _cachedAt: Date.now() };
   await redis.setex(cacheKey, CACHE_TTL, JSON.stringify(cacheObj));
   return NextResponse.json(responseData);
-}
-
-// --- Helper to fetch all data, handle errors, and cache ---
-// This function is no longer directly called by GET, but kept for potential future use or clarity.
-// If it were to be used, its return type would need to be adjusted to handle NextResponse.
-async function refreshAndCache(): Promise<FinalResponse | null> {
-  // This function's logic is now integrated into the GET function.
-  // If it were to be called, it would need to be refactored to return a more specific error or data structure.
-  // For now, we can consider it deprecated in this context.
-  console.warn(
-    "refreshAndCache called directly, which is not the intended flow after refactor."
-  );
-  return null; // Placeholder return
 }
