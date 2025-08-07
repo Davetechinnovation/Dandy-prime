@@ -60,7 +60,7 @@ const cloudflareWorker = {
         supportsMediaTypes: ["movie", "tv", "anime", "kdrama"],
       },
       asiaflix: {
-        domain: "https://asiaflix.to",
+        domain: "https://asiaflix.net/home",
         urlPattern: (mediaType, id) => `embed/${id}`,
         supportsMediaTypes: ["movie", "tv", "anime", "kdrama"],
       },

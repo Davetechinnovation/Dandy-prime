@@ -8,9 +8,10 @@ const ImageWithSkeleton = (props: ImageProps) => {
 
   // Check if the fill prop is present
   const isFill = props.fill;
+  const height = props.height ? `${props.height}px` : (isFill ? '100%' : 'auto');
 
   return (
-    <div className={`relative ${props.className || ""}${isFill ? ' h-full' : ''}`} style={isFill ? { height: '100%' } : {}}>
+    <div className={`relative ${props.className || ""}`} style={{ height }}>
       {loading && <Skeleton className="absolute inset-0" />}
       <Image
         {...props}

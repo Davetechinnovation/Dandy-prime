@@ -1,3 +1,6 @@
+import { NextRequest, NextResponse } from "next/server";
+import redis from "@/lib/redis";
+
 // --- Helper to fetch all data, handle errors, and cache ---
 async function refreshAndCache(): Promise<void> {
   try {
@@ -16,8 +19,6 @@ function isPromiseFulfilled<T>(
 ): result is PromiseFulfilledResult<T | null> {
   return result.status === "fulfilled";
 }
-import { NextRequest, NextResponse } from "next/server";
-import redis from "@/lib/redis";
 
 const TMDB_API_KEY = process.env.TMDB_API_KEY;
 const TMDB_BASE_URL = "https://api.themoviedb.org/3";
@@ -46,10 +47,21 @@ interface Cast {
   profile_path: string | null;
   character: string;
 }
+interface Season {
+  air_date: string;
+  episode_count: number;
+  id: number;
+  name: string;
+  overview: string;
+  poster_path: string | null;
+  season_number: number;
+}
 interface MovieDetails {
   id: number;
   title?: string;
   name?: string;
+  original_name?: string;
+  status?: string;
   vote_average: number;
   poster_path: string | null;
   backdrop_path: string | null;
@@ -62,6 +74,7 @@ interface MovieDetails {
   genres: Genre[];
   adult: boolean;
   vote_count: number;
+  seasons?: Season[];
 }
 interface VideosResponse {
   id: number;
@@ -100,12 +113,15 @@ interface FinalResponse {
   id: number;
   title: string;
   name?: string;
+  original_name?: string;
+  status?: string;
   rating: number;
   poster_path: string | null;
   backdrop_path: string | null;
   overview: string;
   release_date: string;
   runtime: number;
+  episode_run_time?: number[];
   language: string;
   genres: { id: number; name: string }[];
   keywords: { id: number; name: string }[];
@@ -116,6 +132,7 @@ interface FinalResponse {
   similar: MovieDetails[];
   adult: boolean;
   vote_count: number;
+  seasons?: Season[];
 }
 
 // --- Helper for TMDB fetch ---
@@ -136,12 +153,17 @@ async function fetchTMDB<T>(endpoint: string): Promise<T | null> {
   }
 }
 
+// FIXED: Updated RouteContext to use Promise<params>
+interface RouteContext {
+  params: Promise<{
+    mediaType: string;
+    id: string;
+  }>;
+}
 
-  export async function GET(
-  request: NextRequest,
-  context: { params: Promise<{ mediaType: string; id: string }> }
-) {
-  const { id: movieId, mediaType } = await context.params;
+export async function GET(request: NextRequest, context: RouteContext) {
+  // FIXED: Await the params Promise
+  const { mediaType, id: movieId } = await context.params;
 
   if (!movieId || !mediaType) {
     return NextResponse.json(
@@ -258,18 +280,28 @@ async function fetchTMDB<T>(endpoint: string): Promise<T | null> {
   const keywordsList =
     keywordsRes?.keywords?.map((k: Keyword) => ({ id: k.id, name: k.name })) ||
     [];
-  const recommendationsList = recommendationsRes?.results?.slice(0, 8) || [];
-  const similarList = similarRes?.results?.slice(0, 8) || [];
+  const recommendationsList = recommendationsRes?.results?.slice(0, 8).map(movie => ({
+      ...movie,
+      release_date: movie.release_date || movie.first_air_date,
+    })) || [];
+  const similarList = similarRes?.results?.slice(0, 8).map(movie => ({
+      ...movie,
+      release_date: movie.release_date || movie.first_air_date,
+    })) || [];
 
   const responseData: FinalResponse = {
     id: details.id,
     title: details.title || details.name || "",
+    name: details.name,
+    original_name: details.original_name,
+    status: details.status,
     rating: Number(details.vote_average.toFixed(2)),
     poster_path: details.poster_path,
     backdrop_path: details.backdrop_path,
     overview: details.overview,
     release_date: details.release_date || details.first_air_date || "",
-    runtime: details.runtime || (details.episode_run_time && details.episode_run_time[0]) || 0,
+    runtime: details.runtime || 0,
+    episode_run_time: details.episode_run_time,
     language: details.original_language,
     genres,
     keywords: keywordsList,
@@ -280,6 +312,7 @@ async function fetchTMDB<T>(endpoint: string): Promise<T | null> {
     similar: similarList,
     adult: details.adult,
     vote_count: details.vote_count,
+    seasons: mediaType === 'tv' ? details.seasons : undefined,
   };
   const cacheObj = { ...responseData, _cachedAt: Date.now() };
   await redis.setex(cacheKey, CACHE_TTL, JSON.stringify(cacheObj));

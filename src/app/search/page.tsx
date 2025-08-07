@@ -10,7 +10,7 @@ type Movie = {
   image: string | null;
   year: string | null;
   rating: number;
-  media_type?: string;
+  media_type: "movie" | "tv";
 };
 
 const SearchPage = () => {
@@ -174,10 +174,7 @@ const SearchPage = () => {
                   searchMovies.map((movie) => (
                     <MovieCard
                       key={movie.id ? String(movie.id) : movie.title}
-                      movie={{
-                        ...movie,
-                        media_type: movie.media_type === "tv" ? "tv" : "movie",
-                      }}
+                      movie={movie}
                     />
                   ))
                 )}
@@ -206,10 +203,7 @@ const SearchPage = () => {
                   trendingMovies.map((movie) => (
                     <MovieCard
                       key={movie.id ? String(movie.id) : movie.title}
-                      movie={{
-                        ...movie,
-                        media_type: movie.media_type === "tv" ? "tv" : "movie",
-                      }}
+                      movie={movie}
                     />
                   ))
                 )}

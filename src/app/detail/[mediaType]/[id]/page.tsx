@@ -14,6 +14,7 @@ import {
   Play,
   PlayCircle,
   PlayCircleIcon,
+  PlayIcon,
   Share2,
   Star,
   StarIcon,
@@ -36,15 +37,42 @@ interface GenreOrKeyword {
   id: number;
   name: string;
 }
+
+interface Season {
+  air_date: string;
+  episode_count: number;
+  id: number;
+  name: string;
+  overview: string;
+  poster_path: string | null;
+  season_number: number;
+}
+
+interface Episode {
+  id: number;
+  episode_number: number;
+  name: string;
+  overview: string;
+  still_path: string | null;
+  air_date: string;
+  runtime: number;
+  season_number: number;
+}
+
 interface MovieDetails {
   id: number;
   title: string;
+  name?: string; // For TV shows
+  original_name?: string;
+  status?: string;
   rating: number;
   poster_path: string | null;
   backdrop_path: string | null;
   overview: string;
-  release_date: string;
+  release_date?: string;
+  first_air_date?: string;
   runtime: number;
+  episode_run_time?: number[];
   language: string;
   genres: GenreOrKeyword[];
   keywords: GenreOrKeyword[];
@@ -56,16 +84,17 @@ interface MovieDetails {
   similar: unknown[];
   adult: boolean;
   vote_count: number;
+  seasons?: Season[];
 }
 
 import { useParams } from "next/navigation";
 import Loader2 from "../../../Components/Loader2";
-import Image from "next/image";
+
 
 export default function DetailPage() {
   const router = useRouter();
   const params = useParams();
-  const { id, media_type } = params as { id: string; media_type: string };
+  const { id, mediaType } = params as { id: string; mediaType: string };
   const [data, setData] = useState<MovieDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -75,15 +104,23 @@ export default function DetailPage() {
   const [showStream, setShowStream] = useState(false);
   const [streamHtml, setStreamHtml] = useState<string | null>(null);
   const [streamLoading, setStreamLoading] = useState(false);
-  const [currentServer, setCurrentServer] = useState('1'); // Default to server 1
+  const [streamError, setStreamError] = useState<string | null>(null);
+  const [isEpisodeInfoVisible, setIsEpisodeInfoVisible] = useState(false);
+  const [currentServer, setCurrentServer] = useState("1"); // Default to server 1
+  const [seasons, setSeasons] = useState<Season[]>([]);
+  const [selectedSeason, setSelectedSeason] = useState<string>("");
+  const [episodes, setEpisodes] = useState<Episode[]>([]);
+  const [selectedEpisode, setSelectedEpisode] = useState<string>("");
+  const [selectedEpisodeDetails, setSelectedEpisodeDetails] = useState<Episode | null>(null);
+  const [episodeFetchStatus, setEpisodeFetchStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
 
   const serverMap: { [key: string]: string } = {
-    vidsrc: '1',
-    goojara: '2',
-    flixhq: '3',
-    dramacool: '4',
-    asiaflix: '5',
-    zoro: '6',
+    vidsrc: "1",
+    goojara: "2",
+    flixhq: "3",
+    dramacool: "4",
+    asiaflix: "5",
+    zoro: "6",
   };
 
   const handlePlayVideo = (key: string | null) => {
@@ -98,11 +135,14 @@ export default function DetailPage() {
   const handlePlayStream = async () => {
     setStreamLoading(true);
     setShowStream(true);
+    setStreamError(null);
+    setStreamHtml(null);
     setShowVideo(false); // Ensure trailer is hidden when stream plays
     try {
-      const res = await fetch(`/api/stream/${id}?media_type=${media_type}`);
+      const res = await fetch(`/api/stream/${id}?mediaType=${mediaType}`);
       if (!res.ok) {
-        throw new Error('Failed to fetch stream');
+        const errorText = await res.text();
+        throw new Error(`Failed to fetch stream: ${res.status} ${res.statusText} - ${errorText}`);
       }
       const data = await res.json();
       setStreamHtml(data.html);
@@ -110,24 +150,31 @@ export default function DetailPage() {
         setCurrentServer(serverMap[data.sourceName]);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load stream');
-      setShowStream(false);
+      const errorMessage = err instanceof Error ? err.message : "Failed to load stream";
+      setStreamError(errorMessage);
+      console.error("Stream error:", errorMessage);
     } finally {
       setStreamLoading(false);
     }
   };
 
   useEffect(() => {
-    if (!id || !media_type) return;
+    if (!id || !mediaType) return;
     setLoading(true);
     setError(null);
-    fetch(`/api/home/details/${media_type}/${id}`)
+    fetch(`/api/home/details/${mediaType}/${id}`)
       .then(async (res) => {
         if (!res.ok) throw new Error("Failed to fetch movie details");
         return res.json();
       })
       .then((json) => {
         setData(json);
+        if (json.seasons) {
+          setSeasons(json.seasons);
+          if (json.seasons.length > 0) {
+            setSelectedSeason(json.seasons[0].season_number.toString());
+          }
+        }
         console.log("Fetched data:", json); // Added log
         console.log("Backdrop path:", json.backdrop_path);
         console.log("Poster path:", json.poster_path);
@@ -137,9 +184,46 @@ export default function DetailPage() {
         setError(err.message || "Unknown error");
         setLoading(false);
       });
-  }, [id, media_type]);
+  }, [id, mediaType]);
 
-  if (!id || !media_type) {
+  useEffect(() => {
+    if (selectedSeason && mediaType === 'tv') {
+      fetch(`/api/home/details/tv/${id}/season/${selectedSeason}`)
+        .then(res => res.json())
+        .then(data => {
+          setEpisodes(data.episodes);
+          if (data.episodes.length > 0) {
+            setSelectedEpisode(data.episodes[0].episode_number.toString());
+          }
+        });
+    }
+  }, [selectedSeason, id, mediaType]);
+
+  useEffect(() => {
+    if (selectedEpisode && selectedSeason && mediaType === "tv") {
+      setEpisodeFetchStatus("loading");
+      setSelectedEpisodeDetails(null);
+      fetch(
+        `/api/home/details/tv/${id}/season/${selectedSeason}/episode/${selectedEpisode}`
+      )
+        .then((res) => {
+          if (!res.ok) {
+            throw new Error("Episode not found");
+          }
+          return res.json();
+        })
+        .then((data) => {
+          setSelectedEpisodeDetails(data);
+          setEpisodeFetchStatus("success");
+        })
+        .catch(() => {
+          setSelectedEpisodeDetails(null);
+          setEpisodeFetchStatus("error");
+        });
+    }
+  }, [selectedEpisode, selectedSeason, id, mediaType]);
+
+  if (!id || !mediaType) {
     return (
       <div className="text-white flex justify-center items-center h-screen">
         <p>Missing movie ID or media type.</p>
@@ -147,7 +231,7 @@ export default function DetailPage() {
     );
   }
 
-  if (!isValidMediaType(media_type)) {
+  if (!isValidMediaType(mediaType)) {
     return (
       <div className="text-white flex justify-center items-center h-screen">
         <p>Invalid media type.</p>
@@ -185,7 +269,7 @@ export default function DetailPage() {
   return (
     <main className="text-white sm:py-[71px] py-[85px] bg-[#0a0a0a] ">
       <section className="grid items-start md:grid-cols-[760px_1fr] small:grid-cols-1 medium:grid-cols-[610px_1fr] grid-cols-1  gap-2">
-        <div className="relative w-full sm:h-[355px] h-[205px] ">
+        <div className="relative w-full sm:h-[355px] h-[205px] bg-black">
           {showStream ? (
             <>
               {streamLoading && (
@@ -193,7 +277,18 @@ export default function DetailPage() {
                   <Loader2 height={40} />
                 </div>
               )}
-              {streamHtml && (
+              {streamError ? (
+                <div className="w-full h-full flex flex-col justify-center items-center text-center p-4">
+                  <p className="text-red-400">Error loading movie details.</p>
+                  <p className="text-red-500 mb-4">{streamError}</p>
+                  <button
+                    onClick={handlePlayStream}
+                    className="px-4 py-2 bg-blue-700 rounded hover:bg-blue-600"
+                  >
+                    Refetch
+                  </button>
+                </div>
+              ) : streamHtml && (
                 <iframe
                   srcDoc={streamHtml}
                   title="Stream Player"
@@ -202,9 +297,23 @@ export default function DetailPage() {
                   className="w-full h-full"
                 ></iframe>
               )}
-              <button onClick={() => setShowStream(false)} className="absolute top-2 right-2 z-20 bg-black bg-opacity-50 rounded-full p-1 text-white">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <button
+                onClick={() => setShowStream(false)}
+                className="absolute top-2 right-2 z-20 bg-black bg-opacity-50 rounded-full p-1 text-white"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </>
@@ -224,9 +333,23 @@ export default function DetailPage() {
                 className="w-full h-full"
                 onLoad={() => setVideoLoading(false)}
               ></iframe>
-               <button onClick={() => setShowVideo(false)} className="absolute top-6 right-2 z-20 bg-black bg-opacity-50 rounded-full p-1 text-white">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <button
+                onClick={() => setShowVideo(false)}
+                className="absolute top-6 right-2 z-20 bg-black bg-opacity-50 rounded-full p-1 text-white"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </>
@@ -280,10 +403,7 @@ export default function DetailPage() {
 
         <div className="sm:px-5 px-2 ">
           <h1 className="sm:text-[28px] text-[23px] font-bold ">
-            {data.title ||
-              (typeof data === "object" && "name" in data
-                ? (data as { name?: string }).name
-                : "")}
+            {data.title || data.name}
           </h1>
 
           <p className="flex items-center gap-5 text-[15px] font-medium py-3 ">
@@ -356,24 +476,9 @@ export default function DetailPage() {
             <select
               name="server"
               id="server"
-              className=" cursor-pointer bg-black border-2 border-blue-700 rounded-full px-2  focus:outline-none focus:ring-0"
-            >
-              <option value="1">Server 1</option>
-              <option value="2">Server 2</option>
-              <option value="3">Server 3</option>
-              <option value="4">Server 4</option>
-              <option value="5">Server 5</option>
-              <option value="6">Server 6</option>
-            </select>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3 py-[10px] ">
-            <select
-              name="server"
-              id="server"
               value={currentServer}
               onChange={(e) => setCurrentServer(e.target.value)}
-              className=" cursor-pointer bg-black border-2 border-blue-700 rounded-full px-2 py-2 focus:outline-none focus:ring-0"
+              className=" cursor-pointer bg-black border-2 border-blue-700 rounded-full px-2 py-3 focus:outline-none focus:ring-0"
             >
               <option value="1">Vidsrc</option>
               <option value="2">Goojara</option>
@@ -382,48 +487,155 @@ export default function DetailPage() {
               <option value="5">Asiaflix</option>
               <option value="6">Zoro</option>
             </select>
-
-            <select
-              name="Episode"
-              id="episode"
-              className=" cursor-pointer bg-black border-2 border-blue-700 rounded-full px-2 py-2 focus:outline-none focus:ring-0"
-            >
-              <option value="1">Episode 1</option>
-              <option value="2">Episode 2</option>
-              <option value="3">Episode 3</option>
-              <option value="4">Episode 4</option>
-              <option value="5">Episode 5</option>
-              <option value="6">Episode 6</option>
-              <option value="7">Episode 7</option>
-            </select>
           </div>
-          <div className="smalli:relative">
-            <div className="border-2 w-full border-blue-700 rounded-full py-3 px-2 cursor-pointer ">
-              <div className="flex  gap-3 w-full justify-between  ">
-                <h2>Episode information</h2>
-                <p>
-                  <ChevronDown className="w-2 h-2" />
-                </p>
-              </div>
-            </div>
 
-            <div className="border border-blue-700 w-full smalli:absolute top-14 left-0 ">
-              <div className="flex justify-center items-center w-full max-h-[200px] overflow-hidden">
-                <Image
-                  src="/images/28years.jpg"
-                  alt="28years"
-                  className="w-full h-auto object-cover"
-                  width={0}
-                  height={0}
-                  unoptimized
-                />
+          {mediaType === "tv" && seasons && seasons.length > 0 && (
+            <>
+              <div className="grid grid-cols-2 gap-3 py-[10px] ">
+                <select
+                  name="season"
+                  id="season"
+                  value={selectedSeason}
+                  onChange={(e) => setSelectedSeason(e.target.value)}
+                  className=" cursor-pointer bg-black border-2 border-blue-700 rounded-full px-2  focus:outline-none focus:ring-0"
+                >
+                  {seasons.map((season) => (
+                    <option key={season.id} value={season.season_number}>
+                      Season {season.season_number}
+                    </option>
+                  ))}
+                </select>
+
+                <select
+                  name="Episode"
+                  id="episode"
+                  value={selectedEpisode}
+                  onChange={(e) => setSelectedEpisode(e.target.value)}
+                  className=" cursor-pointer bg-black border-2 border-blue-700 rounded-full px-2 py-2 focus:outline-none focus:ring-0"
+                >
+                  {episodes.map((episode) => (
+                    <option key={episode.id} value={episode.episode_number}>
+                      Episode {episode.episode_number}
+                    </option>
+                  ))}
+                </select>
               </div>
-            </div>
-          </div>
+              <div className="smalli:relative pb-3  ">
+                <div
+                  className="border-2 w-full border-blue-700 rounded-full py-3 px-2 cursor-pointer "
+                  onClick={() => setIsEpisodeInfoVisible(!isEpisodeInfoVisible)}
+                >
+                  <div className="flex items-center gap-3 w-full justify-between  ">
+                    <h2>Episode information</h2>
+                    <p>
+                      <ChevronDown
+                        className={`w-4 h-4 transition-transform duration-300 ${
+                          isEpisodeInfoVisible ? "rotate-180" : ""
+                        }`}
+                      />
+                    </p>
+                  </div>
+                </div>
+
+                {isEpisodeInfoVisible && (
+                  <div
+                    className="rounded-lg p-3 border border-blue-700 w-full smalli:absolute top-14 left-0"
+                    style={
+                      episodeFetchStatus === 'loading'
+                        ? { height: '100px' }
+                        : { height: 'auto' }
+                    }
+                  >
+                    {episodeFetchStatus === 'loading' && (
+                      <div className="flex justify-center items-center w-full h-full">
+                        <Loader2 height={40} />
+                      </div>
+                    )}
+                    {episodeFetchStatus === 'error' && (
+                       <div className="flex justify-center items-center w-full h-[150px]">
+                        <p>Episode details not available.</p>
+                      </div>
+                    )}
+                    {episodeFetchStatus === 'success' && selectedEpisodeDetails && (
+                      <>
+                        <div className="flex justify-center items-center w-full h-[150px] overflow-hidden relative bg-gray-800 rounded-lg">
+                          {selectedEpisodeDetails.still_path ? (
+                            <ImageWithSkeleton
+                              src={`${imageBase}${selectedEpisodeDetails.still_path}`}
+                              alt={
+                                selectedEpisodeDetails.name || "Episode image"
+                              }
+                              width={0}
+                              height={0}
+                              unoptimized
+                              className="w-full h-auto object-cover rounded-xl"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex flex-col justify-center items-center">
+                              <Loader2 height={40} />
+                              <p className="text-white text-sm mt-2">
+                                Image not available
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                        <div className="pt-3 ">
+                          {selectedEpisodeDetails.name && (
+                            <p className="text-[16px] font-bold ">
+                              S{selectedEpisodeDetails.season_number} E
+                              {selectedEpisodeDetails.episode_number}:{" "}
+                              {selectedEpisodeDetails.name}
+                            </p>
+                          )}
+                          {selectedEpisodeDetails.air_date && (
+                            <p className="py-2">
+                              <span className="font-medium text-[15px]">
+                                Release date:
+                              </span>{" "}
+                              <span className="text-[13px]">
+                                {selectedEpisodeDetails.air_date}
+                              </span>
+                            </p>
+                          )}
+                          {selectedEpisodeDetails.overview && (
+                            <p>
+                              <span className="font-medium text-[15px]">
+                                Episode description:
+                              </span>{" "}
+                              <span className="text-[13px]">
+                                {selectedEpisodeDetails.overview}
+                              </span>
+                            </p>
+                          )}
+                          {selectedEpisodeDetails.runtime > 0 && (
+                            <p className="py-2">
+                              <span className="font-medium text-[15px]">
+                                Runtime:
+                              </span>{" "}
+                              <span className="text-[13px]">
+                                {selectedEpisodeDetails.runtime} minutes
+                              </span>
+                            </p>
+                          )}
+                        </div>
+                        <button className=" flex justify-center items-center gap-2 w-full bg-blue-700 py-2 border-2 border-blue-700 hover:bg-transparent duration-500 transition-all rounded-lg">
+                          {" "}
+                          <span>
+                            <PlayIcon />
+                          </span>{" "}
+                          <span>Play Now</span>{" "}
+                        </button>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
         </div>
       </section>
 
-      <section className=" small:pt-[0px] pt-[78px] px-4 ">
+      <section className=" small:pt-[0] pt-[78px]  px-4 ">
         <div className=" max-w-[400px] w-full py-4">
           <div className=" grid grid-cols-[1fr_2fr] w-full">
             <div className="">
@@ -472,7 +684,25 @@ export default function DetailPage() {
             <div className="flex items-center justify-between max-w-[300px]   ">
               <dt>Runtime</dt>
               <dd className="text-[14px] sm:text-[16px] ">
-                {data.runtime} minutes
+                {mediaType === "tv" && data.episode_run_time && data.episode_run_time.length > 0
+                  ? `${data.episode_run_time[0]} minutes`
+                  : `${data.runtime} minutes`}
+              </dd>
+            </div>
+          </div>
+          <div className="border-b border-b-blue-700 py-2">
+            <div className="flex items-center justify-between max-w-[300px]   ">
+              <dt>Original Name</dt>
+              <dd className="text-[14px] sm:text-[16px] ">
+                {data.original_name || data.name}
+              </dd>
+            </div>
+          </div>
+          <div className="border-b border-b-blue-700 py-2">
+            <div className="flex items-center justify-between max-w-[300px]   ">
+              <dt>Status</dt>
+              <dd className="text-[14px] sm:text-[16px] ">
+                {data.status}
               </dd>
             </div>
           </div>
@@ -496,7 +726,7 @@ export default function DetailPage() {
                 href={`/search/genre/${genre.id}?name=${encodeURIComponent(
                   genre.name
                 )}`}
-                className="px-10 py-[5px] cursor-pointer bg-blue-700 rounded-3xl hover:bg-transparent border-2 border-blue-700 duration-500 transition-all hover:text-blue-700"
+                className=" text-[13px] sm:text-[16px] px-10 py-[2px] sm:py-[5px] cursor-pointer bg-blue-700 rounded-3xl hover:bg-transparent border-2 border-blue-700 duration-500 transition-all hover:text-blue-700"
               >
                 {genre.name}
               </Link>
@@ -517,26 +747,27 @@ export default function DetailPage() {
             <h2 className="text-[25px] font-semibold  my-3 border-b-2 border-b-blue-700 max-w-[50px] w-full ">
               Cast
             </h2>
-            <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar">
+            <div className="flex items-center gap-4 overflow-x-auto hide-scrollbar">
               {data.main_cast.map((cast, idx) => (
                 <div
                   key={cast.name + "-" + cast.character + "-" + idx}
-                  className="min-w-[100px]  max-w-[150px]  "
+                  className="flex flex-col items-center w-[150px] flex-shrink-0"
                 >
-                  <ImageWithSkeleton
-                    src={
-                      cast.profile_path
-                        ? imageBase + cast.profile_path
-                        : "/images/cast-replacing.png"
-                    }
-                    alt={cast.name}
-                    width={200}
-                    height={100}
-                    unoptimized
-                    className="object-cover rounded-lg"
-                  />
-                  <p className="text-center mt-2 truncate ">{cast.name}</p>
-                  <p className="text-center text-xs text-gray-400 truncate ">
+                  <div className="relative w-full h-[225px] rounded-lg overflow-hidden">
+                    <ImageWithSkeleton
+                      src={
+                        cast.profile_path
+                          ? imageBase + cast.profile_path
+                          : "/images/cast-replacing.png"
+                      }
+                      alt={cast.name}
+                      fill
+                      unoptimized
+                      className="object-cover"
+                    />
+                  </div>
+                  <p className="text-center mt-2 truncate w-full">{cast.name}</p>
+                  <p className="text-center text-xs text-gray-400 truncate w-full">
                     {cast.character}
                   </p>
                 </div>
@@ -556,7 +787,7 @@ export default function DetailPage() {
                   href={`/search/keyword/${kw.id}?name=${encodeURIComponent(
                     kw.name
                   )}`}
-                  className="px-10 py-[5px] cursor-pointer bg-blue-700 rounded-3xl hover:bg-transparent border-2 border-blue-700 duration-500 transition-all hover:text-blue-700"
+                  className=" text-[13px] sm:text-[16px] px-10 py-[2px] sm:py-[5px] cursor-pointer bg-blue-700 rounded-3xl hover:bg-transparent border-2 border-blue-700 duration-500 transition-all hover:text-blue-700"
                 >
                   {kw.name}
                 </Link>
@@ -591,11 +822,11 @@ export default function DetailPage() {
                     ) : (
                       <div className="w-full h-full bg-gray-800" />
                     )}
-                    <CardOverlay movieId={movie.id} mediaType={media_type} />
+                    <CardOverlay movieId={movie.id} mediaType={mediaType} />
                   </div>
                   <p className="flex gap-3 items-center justify-between mt-1 text-sm">
-                    <span className="truncate">{movie.title}</span>
-                    <span>{movie.release_date?.slice(0, 4)}</span>
+                    <span className="truncate">{movie.title || movie.name}</span>
+                    <span>{(movie.release_date || movie.first_air_date)?.slice(0, 4)}</span>
                   </p>
                 </div>
               );
@@ -630,11 +861,11 @@ export default function DetailPage() {
                     ) : (
                       <div className="w-full h-full bg-gray-800" />
                     )}
-                    <CardOverlay movieId={movie.id} mediaType={media_type} />
+                    <CardOverlay movieId={movie.id} mediaType={mediaType} />
                   </div>
                   <p className="flex gap-3 items-center justify-between mt-1 text-sm">
-                    <span className="truncate">{movie.title}</span>
-                    <span>{movie.release_date?.slice(0, 4)}</span>
+                    <span className="truncate">{movie.title || movie.name}</span>
+                    <span>{(movie.release_date || movie.first_air_date)?.slice(0, 4)}</span>
                   </p>
                 </div>
               );
