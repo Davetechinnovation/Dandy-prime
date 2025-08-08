@@ -101,7 +101,7 @@ export async function GET() {
         votes: movie.vote_count,
         language: movie.original_language,
         description: movie.overview,
-        media_type: "movie", // Add media_type here
+        mediaType: "movie", // Add mediaType here
       }))
       .filter((m: HeroMovie) => m.id && m.title);
 

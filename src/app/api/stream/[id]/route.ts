@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse } from "next/server";
 const CONFIG = {
   FETCH_TIMEOUT: 8000,
@@ -57,17 +56,20 @@ const TV_SOURCES = ["sonix", "asiaflix", "dramacool", "zoro"];
 async function fetchFromSourceDirectly(
   sourceName: string,
   id: string,
-  mediaType: MediaType
+  mediaType: MediaType,
+  season?: string | null,
+  episode?: string | null
 ): Promise<{ response: Response; sourceName: string }> {
   const sourceConfig = SOURCE_CONFIG[sourceName as keyof typeof SOURCE_CONFIG];
   if (!sourceConfig) {
     throw new Error(`Invalid source: ${sourceName}`);
   }
 
-  const targetUrl = `${sourceConfig.domain}/${sourceConfig.urlPattern(
-    mediaType,
-    id
-  )}`;
+  let urlPath = sourceConfig.urlPattern(mediaType, id);
+  if (mediaType === 'tv' && season && episode) {
+    urlPath += `/${season}/${episode}`;
+  }
+  const targetUrl = `${sourceConfig.domain}/${urlPath}`;
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), CONFIG.FETCH_TIMEOUT);
@@ -116,17 +118,25 @@ export async function GET(
     return new NextResponse("Invalid media type", { status: 400 });
   }
   const mediaType = mediaTypeParam as MediaType;
+  const season = request.nextUrl.searchParams.get("season");
+  const episode = request.nextUrl.searchParams.get("episode");
 
   const sources = mediaType === "tv" ? TV_SOURCES : MOVIE_SOURCES;
 
   try {
     console.log("Trying sources:", sources);
     const fetchPromises = sources.map((sourceName) =>
-      fetchFromSourceDirectly(sourceName, id, mediaType)
+      fetchFromSourceDirectly(sourceName, id, mediaType, season, episode)
     );
     const { response, sourceName } = await Promise.any(fetchPromises);
     console.log(`Success with source: ${sourceName}`);
-    const html = await response.text();
+    let html = await response.text();
+
+    if (sourceName === "sonix") {
+      const baseUrl = "https://sonix-movies.vercel.app";
+      html = html.replace("<head>", `<head><base href="${baseUrl}">`);
+    }
+
     return NextResponse.json({ html, sourceName });
   } catch (error) {
     if (error instanceof AggregateError) {

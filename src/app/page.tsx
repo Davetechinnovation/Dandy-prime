@@ -27,7 +27,7 @@ type HeroMovie = {
   votes: number;
   language: string;
   description: string;
-  mediaType: string;
+  media_type: "movie" | "tv";
 };
 
 export default function Home() {
@@ -189,7 +189,7 @@ export default function Home() {
                         {currentMovie.description}
                       </p>
                       <div className="flex sm:gap-4 gap-2 items-center">
-                        <Link href={`/detail/${currentMovie.mediaType}/${currentMovie.id}`}>
+                        <Link href={`/detail/${currentMovie.media_type}/${currentMovie.id}`}>
                           <button className="sm:text-[17px] text-[14px] flex items-center gap-2 bg-blue-700 sm:px-4 px-2 py-[5px] rounded-md cursor-pointer border-2 border-blue-700 hover:text-blue-700 hover:bg-transparent duration-500 transition-all">
                             <PlayCircle className="w-5 h-5 cursor-pointer" />
                             Watch Now
@@ -246,7 +246,7 @@ export default function Home() {
                           {nextMovie.description}
                         </p>
                         <div className="flex sm:gap-4 gap-2 items-center">
-                           <Link href={`/detail/${nextMovie.mediaType}/${nextMovie.id}`}>
+                           <Link href={`/detail/${nextMovie.media_type}/${nextMovie.id}`}>
                          <button className="sm:text-[17px] text-[14px] flex items-center gap-2 bg-blue-700 sm:px-4 px-2 py-[5px] rounded-md cursor-pointer border-2 border-blue-700 hover:text-blue-700 hover:bg-transparent duration-500 transition-all">
                            <PlayCircle className="w-5 h-5 cursor-pointer" />
                               Watch Now

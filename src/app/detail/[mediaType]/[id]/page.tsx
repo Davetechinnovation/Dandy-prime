@@ -139,7 +139,11 @@ export default function DetailPage() {
     setStreamHtml(null);
     setShowVideo(false); // Ensure trailer is hidden when stream plays
     try {
-      const res = await fetch(`/api/stream/${id}?mediaType=${mediaType}`);
+      let apiUrl = `/api/stream/${id}?mediaType=${mediaType}`;
+      if (mediaType === 'tv' && selectedSeason && selectedEpisode) {
+        apiUrl += `&season=${selectedSeason}&episode=${selectedEpisode}`;
+      }
+      const res = await fetch(apiUrl);
       if (!res.ok) {
         const errorText = await res.text();
         throw new Error(`Failed to fetch stream: ${res.status} ${res.statusText} - ${errorText}`);

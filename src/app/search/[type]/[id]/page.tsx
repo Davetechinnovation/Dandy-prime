@@ -85,7 +85,7 @@ const SearchByTypePage = () => {
 
   return (
     <div className="min-h-screen text-white ">
-      <div className="sm:pt-[88px] pt-[99px] pb-36 sm:px-5 px-3 ">
+      <div className="sm:pt-[88px] pt-[99px] pb-36 sm:px-5 px-3">
         <p
           onClick={handleBack}
           className="md:px-2 px-1 sm:py-3 py-1 max-w-[40px] w-full cursor-pointer border-2 border-blue-700 rounded-xl"
@@ -96,14 +96,14 @@ const SearchByTypePage = () => {
           {type === "genre" ? "Genre: " : "Keyword: "}
           <span className="text-blue-400">{name}</span>
         </h2>
-        <div className="px-2 grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-[15px]">
+        <div className=" px-2 grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-x-2 gap-y-10 sm:gap-[15px]">
           {isLoading && movies.length === 0 && (
             <div className="col-span-3 md:col-span-6 flex justify-center items-center py-8">
               <Loader />
             </div>
           )}
           {movies.length === 0 && !isLoading ? (
-            <div className="col-span-3 md:col-span-6 text-center text-gray-400 py-8">
+            <div className="col-span-3 md:col-span-6 text-center  w-full text-gray-400 py-8">
               No results found.
             </div>
           ) : (

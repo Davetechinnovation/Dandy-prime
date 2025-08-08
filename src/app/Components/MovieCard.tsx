@@ -47,7 +47,7 @@ const MovieCard: React.FC<MovieCardProps> = ({
     <div
       ref={cardRef}
       className={`relative ${
-        width ? width : isSmall ? "min-w-[100px] w-[150px]" : ""
+        width ? width : isSmall ? "min-w-[100px] w-[150px]  " : ""
       }`}
       tabIndex={0}
       onClick={() => {
@@ -57,16 +57,16 @@ const MovieCard: React.FC<MovieCardProps> = ({
       <ImageWithSkeleton
         src={movie.image || "/images/sinners.webp"}
         alt={movie.title}
-        width={isSmall ? 200 : 500}
-        height={isSmall ? 100 : 300}
-        className="w-full h-[160px] sm:h-[300px] rounded-t-lg object-cover cursor-pointer"
+        width={isSmall ? 150 : 500}
+        height={isSmall ? 0 : 0}
+        className="w-full rounded-t-lg object-cover cursor-pointer h-[160px] sm:h-[300px]  "
         loading="lazy"
         placeholder="blur"
         blurDataURL="/images/sinners.webp"
       />
 
       <div
-        className={`border border-t-0 flex  flex-col gap-2 border-blue-700 rounded-b-lg px-2 leading-6`}
+        className={`border border-t-0 flex  flex-col gap-2 border-blue-700 rounded-b-lg px-1 leading-6`}
       >
         <p className="truncate text-[12px] sm:text-[16px]">{movie.title}</p>
         <p className="flex items-center justify-between text-[11px] sm:text-[14px]">
@@ -83,7 +83,7 @@ const MovieCard: React.FC<MovieCardProps> = ({
           <div className="absolute top-2 right-2">
             <Bookmark className="w-5 h-5 cursor-pointer text-blue-700" />
           </div>
-          <div className="absolute bottom-[67px] left-1/2 -translate-x-1/2">
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 mb-4">
             <Link href={`/detail/${movie.media_type}/${movie.id}`}>
                <button
                 onClick={(e) => e.stopPropagation()}
