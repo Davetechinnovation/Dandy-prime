@@ -79,11 +79,11 @@ const MovieCard: React.FC<MovieCardProps> = ({
       </div>
 
       {showOverlay && (
-        <div className="w-full h-full bg-blue-700/15 absolute top-0 left-0 cursor-pointer rounded-lg transition-opacity duration-300 z-10">
+        <div className="w-full h-full bg-blue-700/15 absolute top-0 left-0 cursor-pointer rounded-lg transition-opacity duration-300 ">
           <div className="absolute top-2 right-2">
             <Bookmark className="w-5 h-5 cursor-pointer text-blue-700" />
           </div>
-          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 mb-4">
+          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 mb-4">
             <Link href={`/detail/${movie.media_type}/${movie.id}`}>
                <button
                 onClick={(e) => e.stopPropagation()}

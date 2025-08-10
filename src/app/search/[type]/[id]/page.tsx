@@ -120,7 +120,7 @@ const SearchByTypePage = () => {
         </div>
         {isFetchingNextPage && <Loader height={60} />}
         {!hasNextPage && movies.length > 0 && (
-          <div className="text-white text-lg py-6">No more results.</div>
+          <div className="text-white text-lg py-6 text-center  w-full">No more results.</div>
         )}
         <div ref={loader} />
       </div>
