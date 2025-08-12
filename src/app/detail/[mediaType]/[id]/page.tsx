@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import ImageWithSkeleton from "../../../Components/ImageWithSkeleton";
 import Link from "next/link";
 import CardOverlay from "@/app/Components/CardOverlay";
+import VideoPlayer from "@/app/Components/VideoPlayer";
 import { isValidMediaType } from "@/lib/utils";
 
 import {
@@ -101,11 +102,7 @@ export default function DetailPage() {
   const [showVideo, setShowVideo] = useState(false);
   const [videoKey, setVideoKey] = useState<string | null>(null);
   const [videoLoading, setVideoLoading] = useState(false);
-  const [showStream, setShowStream] = useState(false);
-  const [streamHtml, setStreamHtml] = useState<string | null>(null);
-  const [streamLoading, setStreamLoading] = useState(false);
   const [streamError, setStreamError] = useState<string | null>(null);
-
   const [isEpisodeInfoVisible, setIsEpisodeInfoVisible] = useState(false);
   const [currentServer, setCurrentServer] = useState("dramacool.com.kg"); // Default to first source
   const [seasons, setSeasons] = useState<Season[]>([]);
@@ -125,30 +122,29 @@ export default function DetailPage() {
       setVideoKey(key);
       setVideoLoading(true);
       setShowVideo(true);
-      setShowStream(false); // Ensure stream is hidden when trailer plays
+      // setShowStream(false); // Removed: showStream no longer exists
     }
   };
 
   const handlePlayStream = async (sourceName?: string) => {
-    setStreamLoading(true);
-    setShowStream(true);
+    setShowVideo(true); // Show the player immediately
+    setVideoLoading(true);
     setStreamError(null);
-    setStreamHtml(null);
-    setShowVideo(false); // Ensure trailer is hidden when stream plays
     try {
       const params = new URLSearchParams({
-        type: mediaType === "tv" ? "TV Shows" : "Movies",
-        id: id, // Use the TMDB ID from URL params instead of title
-        category: data?.genres?.[0]?.name || "",
+        type: mediaType,
+        id: id,
       });
+
+      if (sourceName) {
+        params.append("source", sourceName);
+      } else {
+        params.append("source", currentServer);
+      }
 
       if (mediaType === "tv" && selectedSeason && selectedEpisode) {
         params.append("season", selectedSeason);
         params.append("episode", selectedEpisode);
-      }
-
-      if (sourceName) {
-        params.append("source", sourceName);
       }
 
       const res = await fetch(`/api/stream?${params.toString()}`);
@@ -160,10 +156,7 @@ export default function DetailPage() {
       }
       const responseData = await res.json();
       if (responseData.streamUrl) {
-        console.log("Stream URL received:", responseData.streamUrl);
         setVideoKey(responseData.streamUrl);
-        setShowVideo(true);
-        setShowStream(false);
       } else {
         throw new Error(responseData.error || "No stream URL found");
       }
@@ -171,9 +164,9 @@ export default function DetailPage() {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to load stream";
       setStreamError(errorMessage);
-      console.error("Stream error:", errorMessage);
+      setShowVideo(false); // Hide player on error
     } finally {
-      setStreamLoading(false);
+      setVideoLoading(false);
     }
   };
 
@@ -287,64 +280,29 @@ export default function DetailPage() {
   const imageBase = "https://image.tmdb.org/t/p/original";
   return (
     <main className="text-white sm:py-[71px] py-[85px] bg-[#0a0a0a] ">
-      <section className="grid items-start md:grid-cols-[760px_1fr] small:grid-cols-1 medium:grid-cols-[610px_1fr] grid-cols-1  gap-2">
+      <section className="grid items-start md:grid-cols-[760px_1fr] small:grid-cols-1 medium:grid-cols-[610px_1fr] grid-cols-1 gap-2">
         <div className="relative w-full sm:h-[355px] h-[205px] bg-black">
-          {showStream ? (
-            <>
-              {streamLoading && (
-                <div className="absolute inset-0 flex justify-center items-center bg-black bg-opacity-50 z-10">
-                  <Loader2 height={40} />
-                </div>
-              )}
-              {streamError ? (
+          {showVideo ? (
+            videoKey ? (
+              <VideoPlayer src={videoKey} />
+            ) : videoLoading ? (
+              <div className="absolute inset-0 flex justify-center items-center bg-black bg-opacity-50 z-10">
+                <Loader2 height={40} />
+              </div>
+            ) : (
+              streamError && (
                 <div className="w-full h-full flex flex-col justify-center items-center text-center p-4">
-                  <p className="text-red-400">Error loading movie details.</p>
+                  <p className="text-red-400">Error loading stream.</p>
                   <p className="text-red-500 mb-4">{streamError}</p>
                   <button
                     onClick={() => handlePlayStream()}
                     className="px-4 py-2 bg-blue-700 rounded hover:bg-blue-600"
                   >
-                    Refetch
+                    Retry
                   </button>
                 </div>
-              ) : (
-                streamHtml && (
-                  <iframe
-                    srcDoc={streamHtml}
-                    title="Stream Player"
-                    frameBorder="0"
-                    allowFullScreen
-                    className="w-full h-full"
-                  ></iframe>
-                )
-              )}
-            </>
-          ) : showVideo && videoKey ? (
-            <>
-              {videoLoading && (
-                <div className="absolute inset-0 flex justify-center items-center bg-black bg-opacity-50 z-10">
-                  <Loader2 height={40} />
-                </div>
-              )}
-              <iframe
-                src={
-                  videoKey?.startsWith("http")
-                    ? `${videoKey}?autoplay=1`
-                    : `https://www.youtube.com/embed/${videoKey}?autoplay=1&rel=0`
-                }
-                title={
-                  videoKey?.startsWith("http")
-                    ? "Video player"
-                    : "YouTube video player"
-                }
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                className="w-full h-full"
-                onLoad={() => setVideoLoading(false)}
-                referrerPolicy="origin"
-              ></iframe>
-            </>
+              )
+            )
           ) : (
             <>
               {data.backdrop_path ? (
@@ -369,7 +327,7 @@ export default function DetailPage() {
           )}
           <div
             className={`max-w-[150px] small:hidden h-[220px] absolute w-full -bottom-[70px] left-10 ${
-              showVideo || showStream ? "hidden" : ""
+              showVideo ? "hidden" : ""
             }`}
             style={{ height: "220px" }}
           >
@@ -387,16 +345,17 @@ export default function DetailPage() {
           </div>
           <div
             onClick={
-              showVideo || showStream
+              showVideo
                 ? () => {
                     setShowVideo(false);
-                    setShowStream(false);
+                    setVideoKey(null);
+                    setStreamError(null);
                   }
                 : handleBack
             }
             className="md:px-2 px-1 sm:py-3 py-1 absolute top-0 left-0 cursor-pointer border-2 border-blue-700 rounded-xl z-30 bg-blue-700 "
           >
-            {showVideo || showStream ? (
+            {showVideo ? (
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-6 w-6"
@@ -494,8 +453,9 @@ export default function DetailPage() {
               id="server"
               value={currentServer}
               onChange={(e) => {
-                setCurrentServer(e.target.value);
-                handlePlayStream(e.target.value);
+                const newServer = e.target.value;
+                setCurrentServer(newServer);
+                handlePlayStream(newServer);
               }}
               className=" cursor-pointer bg-black border-2 border-blue-700 rounded-full px-2 py-3 focus:outline-none focus:ring-0"
             >

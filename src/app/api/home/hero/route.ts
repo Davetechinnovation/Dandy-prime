@@ -101,9 +101,14 @@ export async function GET() {
         votes: movie.vote_count,
         language: movie.original_language,
         description: movie.overview,
-        mediaType: "movie", // Add mediaType here
+        media_type: "movie", // Add media_type here
       }))
-      .filter((m: HeroMovie) => m.id && m.title);
+      .filter((m: unknown) => {
+        if (typeof m === "object" && m !== null && "id" in m && "title" in m) {
+          return m.id && m.title;
+        }
+        return false;
+      });
 
     // Cache in Redis (Upstash: setex for atomic set+expire)
     await redis.setex(HERO_CACHE_KEY, HERO_CACHE_TTL, JSON.stringify(heroes));
